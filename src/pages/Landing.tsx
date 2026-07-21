@@ -10,12 +10,17 @@ const exams = ["NEET", "JEE Main", "JEE Advanced", "KEAM", "CUET", "Board Exams"
 
 export function Landing() {
   return (
-    <main className="public-page">
-      <PublicHeader />
-      <section className="hero public-hero">
-        <div className="hero-copy">
-          <p className="eyebrow">AI-powered hybrid coaching for school students</p>
-          <h1 className="headline">Active learning for India's next top rankers.</h1>
+    <main className="public-page landing-page">
+      <section className="toprank-hero-stage">
+        <PublicHeader />
+        <div className="toprank-hero-content">
+          <div className="hero-copy hero-copy-cinematic">
+            <p className="eyebrow">AI-powered hybrid coaching for school students</p>
+            <div className="staggered-title" aria-label="learn practice rank">
+              <h1 className="hero-title-word word-learn">learn</h1>
+              <h1 className="hero-title-word word-practice">practice</h1>
+              <h1 className="hero-title-word word-rank">rank</h1>
+            </div>
           <p className="lead">
             TopRank blends daily missions, smart practice, Tara mentor guidance, and progress
             tracking for NEET, JEE, KEAM, CUET, and school exam preparation.
@@ -36,40 +41,51 @@ export function Landing() {
             </Button>
           </div>
         </div>
-        <div className="ai-hero-visual" aria-label="AI powered entrance coaching preview">
-          <div className="student-focus-card">
-            <span className="student-chip">Class 11</span>
-            <h2>Rahul's Mission</h2>
-            <p>Physics Motion</p>
-            <div className="mission-bars">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
-          <div className="mentor-orbit">
-            <div className="mentor-avatar">T</div>
-            <div>
-              <strong>Tara</strong>
-              <span>Try 10 questions now.</span>
-            </div>
-          </div>
-          <div className="rank-card-mini">
-            <strong>NEET 2028</strong>
-            <span>AIIMS Delhi goal</span>
-          </div>
-        </div>
-      </section>
 
-      <section className="exam-marquee-section" aria-label="Competitive exams offered">
-        <p className="eyebrow">Hybrid coaching for competitive exams</p>
-        <div className="exam-marquee">
-          <div className="exam-track">
-            {[...exams, ...exams].map((exam, index) => (
-              <span key={`${exam}-${index}`}>{exam}</span>
-            ))}
+          <div className="ai-hero-visual cinematic-visual" aria-label="AI powered entrance coaching preview">
+            <div className="student-focus-card">
+              <span className="student-chip">Class 11 - NEET 2028</span>
+              <h2>Rahul's Mission</h2>
+              <p>Physics Motion - 30 questions</p>
+              <div className="mission-bars">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+            <div className="mentor-orbit">
+              <div className="mentor-avatar">T</div>
+              <div>
+                <strong>Tara</strong>
+                <span>Revise once. Practice next.</span>
+              </div>
+            </div>
+            <div className="rank-card-mini">
+              <strong>AIIMS Delhi</strong>
+              <span>dream college path</span>
+            </div>
           </div>
         </div>
+
+        <div className="hero-stat top-stat">
+          <strong>64%</strong>
+          <span>mission progress</span>
+        </div>
+        <div className="hero-stat bottom-stat">
+          <strong>12</strong>
+          <span>day streak</span>
+        </div>
+
+        <section className="exam-marquee-section hero-exam-belt" aria-label="Competitive exams offered">
+          <p className="eyebrow">Hybrid coaching for competitive exams</p>
+          <div className="exam-marquee">
+            <div className="exam-track">
+              {[...exams, ...exams].map((exam, index) => (
+                <span key={`${exam}-${index}`}>{exam}</span>
+              ))}
+            </div>
+          </div>
+        </section>
       </section>
 
       <section className="public-section" id="explore">
