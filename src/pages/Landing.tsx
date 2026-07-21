@@ -6,41 +6,41 @@ import { Card } from "../components/ui/Card";
 import { Icon } from "../components/ui/Icon";
 import { SectionHeader } from "../components/ui/SectionHeader";
 
-const exams = ["NEET", "JEE Main", "JEE Advanced", "KEAM", "CUET", "Board Exams", "Foundation", "School Tests"];
+const exams = ["NEET", "JEE Main", "JEE Advanced", "KEAM", "CUET", "Boards", "Foundation", "School Tests"];
 
 export function Landing() {
   return (
     <main className="public-page landing-page">
       <section className="toprank-hero-stage">
-        <PublicHeader />
-        <div className="toprank-hero-content">
-          <div className="hero-copy hero-copy-cinematic">
-            <p className="eyebrow">AI-powered hybrid coaching for school students</p>
-            <div className="staggered-title" aria-label="learn practice rank">
-              <h1 className="hero-title-word word-learn">learn</h1>
-              <h1 className="hero-title-word word-practice">practice</h1>
-              <h1 className="hero-title-word word-rank">rank</h1>
-            </div>
-          <p className="lead">
-            TopRank blends daily missions, smart practice, Tara mentor guidance, and progress
-            tracking for NEET, JEE, KEAM, CUET, and school exam preparation.
-          </p>
-          <div className="hero-proof-row" aria-label="TopRank outcomes">
-            <span>Learn</span>
-            <span>Practice</span>
-            <span>Revise</span>
-            <span>Improve</span>
-          </div>
-          <div className="actions">
-            <Button href="/signup">Start Your Journey</Button>
-            <Button href="#explore" variant="secondary">
-              Explore
-            </Button>
-            <Button href="/demo/start" variant="ghost">
-              Demo Mode
-            </Button>
+        <div className="royal-nav">
+          <a className="royal-wordmark" href="/" aria-label="TopRank AI home">
+            <span>Top</span>
+            <strong>Rank</strong>
+            <em>AI</em>
+          </a>
+          <div className="royal-nav-actions">
+            <a href="#explore">explore</a>
+            <a href="/demo/start">demo</a>
+            <a className="royal-start" href="/signup">start</a>
           </div>
         </div>
+        <div className="toprank-hero-content">
+          <div className="hero-copy hero-copy-cinematic">
+            <p className="royal-eyebrow">India's active learning platform for entrance success</p>
+            <div className="staggered-title" aria-label="learn practice rank">
+              <h1 className="hero-title-word word-learn">crack</h1>
+              <h1 className="hero-title-word word-practice">learn</h1>
+              <h1 className="hero-title-word word-rank">rank</h1>
+            </div>
+            <p className="royal-lead">
+              Premium AI-powered hybrid coaching for NEET, JEE, KEAM, CUET and school exam
+              preparation. One mission. One mentor. One clear next step.
+            </p>
+            <div className="royal-actions">
+              <a className="royal-primary" href="/demo/start">start demo</a>
+              <a className="royal-secondary" href="#explore">explore platform</a>
+            </div>
+          </div>
 
           <div className="ai-hero-visual cinematic-visual" aria-label="AI powered entrance coaching preview">
             <div className="student-focus-card">
@@ -77,10 +77,10 @@ export function Landing() {
         </div>
 
         <section className="exam-marquee-section hero-exam-belt" aria-label="Competitive exams offered">
-          <p className="eyebrow">Hybrid coaching for competitive exams</p>
+          <p className="royal-belt-label">competitive exams we coach</p>
           <div className="exam-marquee">
             <div className="exam-track">
-              {[...exams, ...exams].map((exam, index) => (
+              {[...exams, ...exams, ...exams].map((exam, index) => (
                 <span key={`${exam}-${index}`}>{exam}</span>
               ))}
             </div>
