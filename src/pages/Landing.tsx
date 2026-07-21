@@ -33,6 +33,26 @@ const audienceCards = [
   },
 ];
 
+const journeyStages = [
+  { title: "Dream", label: "goal", value: "AIIMS Delhi", detail: "NEET 2028" },
+  { title: "Today's Mission", label: "focus", value: "motion basics", detail: "64%" },
+  { title: "Learn", label: "lesson", value: "distance", detail: "12 min" },
+  { title: "Practice", label: "set", value: "30 questions", detail: "guided" },
+  { title: "Progress", label: "streak", value: "12 days", detail: "steady" },
+  { title: "Dream College", label: "path", value: "getting closer", detail: "daily" },
+];
+
+const exams = ["NEET", "JEE", "KEAM", "CUET", "NDA"];
+
+const trustSnapshots = [
+  { title: "Daily Missions", label: "today", value: "one clear goal" },
+  { title: "Practice First", label: "questions", value: "start with 30" },
+  { title: "Parent View", label: "weekly", value: "effort visible" },
+  { title: "School Pulse", label: "class", value: "engagement" },
+  { title: "Tara Guidance", label: "mentor", value: "next step" },
+  { title: "Progress Tracking", label: "growth", value: "64%" },
+];
+
 export function Landing() {
   const [showIntro, setShowIntro] = useState(false);
 
@@ -158,9 +178,74 @@ export function Landing() {
         ))}
       </section>
 
+      <section className="tr-section tr-journey" aria-label="How TopRank works">
+        <div className="tr-section-heading">
+          <p className="tr-eyebrow">How TopRank works</p>
+          <h2>From dream to daily action.</h2>
+        </div>
+        <div className="tr-journey-row">
+          {journeyStages.map((stage) => (
+            <article className="tr-journey-card" key={stage.title}>
+              <strong>{stage.title}</strong>
+              <div className="tr-mini-ui">
+                <p>{stage.label}</p>
+                <h3>{stage.value}</h3>
+                <small>{stage.detail}</small>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="tr-section tr-tara-moment" aria-label="Tara mentor moment">
+        <div className="tr-tara-quote">
+          <p className="tr-eyebrow">The Tara moment</p>
+          <h2>"Don't worry about tomorrow's syllabus. Let's finish today's mission first."</h2>
+          <div className="tr-tara-signature">
+            <span>T</span>
+            <strong>Tara, your mentor</strong>
+          </div>
+        </div>
+        <div className="tr-mentor-preview">
+          <div className="tr-mentor-message student">Physics feels too much today.</div>
+          <div className="tr-mentor-message tara">Start with Motion. Ten easy questions first.</div>
+          <div className="tr-mentor-action">Continue today's mission</div>
+        </div>
+      </section>
+
+      <section className="tr-section tr-exams" aria-label="Built for India's toughest exams">
+        <div>
+          <p className="tr-eyebrow">Built for India's toughest exams</p>
+          <h2>Daily missions adapt to different exam journeys.</h2>
+        </div>
+        <div className="tr-exam-pills">
+          {exams.map((exam) => (
+            <span key={exam}>{exam}</span>
+          ))}
+        </div>
+      </section>
+
+      <section className="tr-section tr-trust" aria-label="Platform trust">
+        <div className="tr-section-heading">
+          <p className="tr-eyebrow">Why families and schools can trust it</p>
+          <h2>TopRank makes effort visible.</h2>
+        </div>
+        <div className="tr-trust-grid">
+          {trustSnapshots.map((item) => (
+            <article className="tr-trust-snapshot" key={item.title}>
+              <strong>{item.title}</strong>
+              <div className="tr-mini-ui">
+                <p>{item.label}</p>
+                <h3>{item.value}</h3>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="tr-section tr-about" id="about">
         <p className="tr-eyebrow">Ready for your first mission?</p>
-        <h2>Every great rank starts with one focused day.</h2>
+        <h2>Your next rank starts with your next mission.</h2>
         <a className="tr-primary tr-arrow" href="/demo/start">Experience Mission Control</a>
       </section>
     </main>
