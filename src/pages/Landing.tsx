@@ -7,6 +7,32 @@ const platformItems = [
   { label: "progress", value: "64%" },
 ];
 
+const showcaseItems = [
+  { title: "Mission Control", label: "today", value: "motion basics", detail: "64%" },
+  { title: "Learn", label: "lesson", value: "distance", detail: "12 min" },
+  { title: "Practice", label: "set", value: "30 questions", detail: "medium" },
+  { title: "Progress", label: "streak", value: "12 days", detail: "steady" },
+  { title: "Tara", label: "mentor", value: "start small", detail: "next step" },
+];
+
+const audienceCards = [
+  {
+    eyebrow: "For students",
+    title: "One focused goal for today.",
+    rows: ["Today's Goal", "Physics", "Continue"],
+  },
+  {
+    eyebrow: "For parents",
+    title: "See effort without pressure.",
+    rows: ["Progress", "Attendance", "Weekly Summary"],
+  },
+  {
+    eyebrow: "For schools",
+    title: "Understand engagement quickly.",
+    rows: ["Engagement", "Participation", "Weekly Activity"],
+  },
+];
+
 export function Landing() {
   const [showIntro, setShowIntro] = useState(false);
 
@@ -27,7 +53,7 @@ export function Landing() {
       {showIntro ? (
         <div className="tr-intro" aria-label="TopRank intro">
           <h1>TopRank</h1>
-          <p>AI Entrance Preparation Platform</p>
+          <p>Personalized Entrance Preparation</p>
           <span />
         </div>
       ) : null}
@@ -35,7 +61,7 @@ export function Landing() {
       <nav className="tr-nav" aria-label="Public navigation">
         <a className="tr-logo" href="/">
           <span>TopRank</span>
-          <small>AI Entrance Preparation</small>
+          <small>Personalized Entrance Prep</small>
         </a>
         <div className="tr-nav-links">
           <a href="/">Home</a>
@@ -46,20 +72,20 @@ export function Landing() {
         </div>
         <div className="tr-nav-actions">
           <a className="tr-login" href="/login">Login</a>
-          <a className="tr-demo" href="/demo/start">Start Demo</a>
+          <a className="tr-demo tr-arrow" href="/demo/start">Start Demo</a>
         </div>
       </nav>
 
       <section className="tr-hero">
         <div className="tr-hero-copy">
-          <p className="tr-eyebrow">India's next-generation AI entrance preparation platform</p>
+          <p className="tr-eyebrow">Personalized daily preparation for entrance success</p>
           <h1>Every Dream Begins With Today's Mission.</h1>
           <p className="tr-hero-subtitle">
-            TopRank helps students prepare for NEET, JEE, KEAM, CUET and school exams through
-            daily missions, smart practice, progress tracking, and Tara mentor guidance.
+            TopRank gives students a clear daily mission, guided practice, steady progress,
+            and Tara's calm mentor support for NEET, JEE, KEAM, CUET and school exams.
           </p>
           <div className="tr-hero-actions">
-            <a className="tr-primary" href="/demo/start">Experience Mission Control</a>
+            <a className="tr-primary tr-arrow" href="/demo/start">Experience Mission Control</a>
             <a className="tr-secondary" href="/presentation-summary">Watch Student Journey</a>
           </div>
         </div>
@@ -102,25 +128,40 @@ export function Landing() {
         </div>
       </section>
 
+      <section className="tr-showcase" aria-label="TopRank product flow">
+        {showcaseItems.map((item, index) => (
+          <article className="tr-showcase-card" key={item.title}>
+            <div className="tr-showcase-top">
+              <span>{index + 1}</span>
+              <strong>{item.title}</strong>
+            </div>
+            <div className="tr-mini-ui">
+              <p>{item.label}</p>
+              <h3>{item.value}</h3>
+              <small>{item.detail}</small>
+            </div>
+          </article>
+        ))}
+      </section>
+
       <section className="tr-section tr-three" id="parents">
-        <div>
-          <p className="tr-eyebrow">For students</p>
-          <h2>One clear next step, every day.</h2>
-        </div>
-        <div>
-          <p className="tr-eyebrow">For parents</p>
-          <h2>Know your child is moving forward.</h2>
-        </div>
-        <div id="schools">
-          <p className="tr-eyebrow">For schools</p>
-          <h2>See engagement without admin clutter.</h2>
-        </div>
+        {audienceCards.map((card) => (
+          <div id={card.eyebrow === "For schools" ? "schools" : undefined} key={card.eyebrow}>
+            <p className="tr-eyebrow">{card.eyebrow}</p>
+            <h2>{card.title}</h2>
+            <div className="tr-audience-preview">
+              {card.rows.map((row) => (
+                <span key={row}>{row}</span>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
 
       <section className="tr-section tr-about" id="about">
-        <p className="tr-eyebrow">Built for entrance success</p>
-        <h2>TopRank turns preparation into a calm daily system of learning, practice, revision, and mentoring.</h2>
-        <a className="tr-primary" href="/demo/start">Start Demo</a>
+        <p className="tr-eyebrow">Ready for your first mission?</p>
+        <h2>Every great rank starts with one focused day.</h2>
+        <a className="tr-primary tr-arrow" href="/demo/start">Experience Mission Control</a>
       </section>
     </main>
   );
