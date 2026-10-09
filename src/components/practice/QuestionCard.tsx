@@ -1,21 +1,38 @@
-import { questionOptions } from "../../data/practice";
 import { ProgressBar } from "../ui/ProgressBar";
 import { OptionCard } from "./OptionCard";
 
-export function QuestionCard() {
+type QuestionCardOption = {
+  code: string;
+  text: string;
+};
+
+export type QuestionCardData = {
+  code: string;
+  text: string;
+  type: string;
+  difficulty: string;
+  subject: { name: string };
+  chapter: { title: string };
+  options: QuestionCardOption[];
+};
+
+export function QuestionCard({ question }: { question: QuestionCardData }) {
   return (
     <section className="question-card">
       <div className="question-topline">
-        <span>Question 18</span>
-        <span>24:18</span>
+        <span>{question.code}</span>
+        <span>{question.difficulty}</span>
       </div>
       <ProgressBar value={45} />
-      <h1 className="question-title">
-        Which statement best describes displacement in straight line motion?
-      </h1>
+      <div className="breadcrumb-strip">
+        <span>{question.subject.name}</span>
+        <span>{question.chapter.title}</span>
+        <span>{question.type.split("_").join(" ")}</span>
+      </div>
+      <h1 className="question-title">{question.text}</h1>
       <div className="question-options">
-        {questionOptions.map((option, index) => (
-          <OptionCard label={String.fromCharCode(65 + index)} text={option} key={option} />
+        {question.options.map((option) => (
+          <OptionCard label={option.code} text={option.text} key={option.code} />
         ))}
       </div>
     </section>

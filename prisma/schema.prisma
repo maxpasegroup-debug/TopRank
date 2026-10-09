@@ -1,0 +1,401 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  PARENT
+  TEACHER
+  SCHOOL_ADMIN
+  PLATFORM_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+  DELETED
+}
+
+enum RelationshipStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+enum ParentRelationshipType {
+  MOTHER
+  FATHER
+  GUARDIAN
+  OTHER
+}
+
+enum SchoolStatus {
+  ACTIVE
+  TRIAL
+  SUSPENDED
+}
+
+enum SchoolMemberRole {
+  OWNER
+  ADMIN
+  TEACHER
+  STAFF
+}
+
+enum SchoolMembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LearningResourceType {
+  VIDEO
+  ARTICLE
+  PDF
+  NOTES
+  EXTERNAL
+  OTHER
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  NUMERICAL
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionReviewStatus {
+  NEEDS_REVIEW
+  REVIEWED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  phone        String?    @unique
+  passwordHash String
+  name         String
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  sessions             Session[]
+  studentProfile       StudentProfile?
+  parentProfile        ParentProfile?
+  teacherProfile       TeacherProfile?
+  schoolMemberships    SchoolMembership[]
+  parentRelationships  StudentParentRelationship[] @relation("ParentRelationshipParent")
+  studentRelationships StudentParentRelationship[] @relation("ParentRelationshipStudent")
+
+  @@index([role])
+  @@index([status])
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StudentProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  targetExamId   String?
+  targetYear     Int?
+  dreamCollege   String?
+  dailyStudyMins Int?
+  onboardingCompletedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetExam Exam? @relation(fields: [targetExamId], references: [id])
+
+  @@index([targetExamId])
+}
+
+model ParentProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TeacherProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StudentParentRelationship {
+  id               String                 @id @default(cuid())
+  studentUserId    String
+  parentUserId     String
+  relationshipType ParentRelationshipType @default(GUARDIAN)
+  status           RelationshipStatus     @default(PENDING)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  student User @relation("ParentRelationshipStudent", fields: [studentUserId], references: [id], onDelete: Cascade)
+  parent  User @relation("ParentRelationshipParent", fields: [parentUserId], references: [id], onDelete: Cascade)
+
+  @@unique([studentUserId, parentUserId])
+  @@index([parentUserId])
+  @@index([status])
+}
+
+model School {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  status    SchoolStatus @default(TRIAL)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  memberships SchoolMembership[]
+}
+
+model SchoolMembership {
+  id        String                 @id @default(cuid())
+  schoolId  String
+  userId    String
+  role      SchoolMemberRole
+  status    SchoolMembershipStatus @default(INVITED)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId])
+  @@index([userId])
+  @@index([role])
+  @@index([status])
+}
+
+model Exam {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  name      String
+  status    ContentStatus @default(DRAFT)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  examSubjects    ExamSubject[]
+  questionExams   QuestionExam[]
+  studentProfiles StudentProfile[]
+
+  @@index([status, active])
+}
+
+model Subject {
+  id        String        @id @default(cuid())
+  code      String?       @unique
+  name      String
+  slug      String        @unique
+  status    ContentStatus @default(DRAFT)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  examSubjects ExamSubject[]
+  chapters     Chapter[]
+  questions    Question[]
+
+  @@index([status, active])
+}
+
+model ExamSubject {
+  id        String   @id @default(cuid())
+  examId    String
+  subjectId String
+  order     Int      @default(0)
+  status    ContentStatus @default(PUBLISHED)
+  active    Boolean       @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, subjectId])
+  @@index([subjectId])
+  @@index([status, active])
+}
+
+model Chapter {
+  id        String        @id @default(cuid())
+  subjectId String
+  title     String
+  slug      String
+  summary   String?
+  order     Int           @default(0)
+  status    ContentStatus @default(DRAFT)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  subject Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+  questions Question[]
+
+  @@unique([subjectId, slug])
+  @@index([subjectId])
+  @@index([status, active])
+}
+
+model Lesson {
+  id        String        @id @default(cuid())
+  chapterId String
+  title     String
+  slug      String
+  summary   String?
+  order     Int           @default(0)
+  status    ContentStatus @default(DRAFT)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  chapter   Chapter            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  resources LearningResource[]
+  questions Question[]
+
+  @@unique([chapterId, slug])
+  @@index([chapterId])
+  @@index([status, active])
+}
+
+model LearningResource {
+  id        String               @id @default(cuid())
+  lessonId  String
+  title     String
+  slug      String
+  type      LearningResourceType @default(OTHER)
+  url       String?
+  reference String?
+  order     Int                  @default(0)
+  status    ContentStatus        @default(DRAFT)
+  active    Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, slug])
+  @@index([lessonId])
+  @@index([status, active])
+}
+
+model Question {
+  id            String               @id @default(cuid())
+  code          String               @unique
+  text          String
+  type          QuestionType
+  difficulty    QuestionDifficulty   @default(MEDIUM)
+  status        ContentStatus        @default(DRAFT)
+  active        Boolean              @default(true)
+  subjectId     String
+  chapterId     String
+  lessonId      String?
+  explanation   String?
+  solutionRef   String?
+  source        String?
+  sourceYear    Int?
+  language      String               @default("en")
+  reviewStatus  QuestionReviewStatus @default(NEEDS_REVIEW)
+  tags          String[]             @default([])
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  subject Subject          @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  chapter Chapter          @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+  lesson  Lesson?          @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  options QuestionOption[]
+  exams   QuestionExam[]
+
+  @@index([subjectId])
+  @@index([chapterId])
+  @@index([lessonId])
+  @@index([type])
+  @@index([difficulty])
+  @@index([status, active])
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  code       String
+  questionId String
+  text       String
+  order      Int      @default(0)
+  isCorrect  Boolean  @default(false)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, code])
+  @@index([questionId])
+  @@index([active])
+}
+
+model QuestionExam {
+  id            String        @id @default(cuid())
+  questionId    String
+  examId        String
+  status        ContentStatus @default(PUBLISHED)
+  active        Boolean       @default(true)
+  marks         Decimal       @default(4) @db.Decimal(5, 2)
+  negativeMarks Decimal       @default(1) @db.Decimal(5, 2)
+  sourceYear    Int?
+  category      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  exam     Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, examId])
+  @@index([examId])
+  @@index([questionId])
+  @@index([status, active])
+}

@@ -1,5 +1,12 @@
 node_modules/
 dist/
+.env
+.env.*
+!.env.example
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+
+/src/generated/prisma
+.next/
+coverage/

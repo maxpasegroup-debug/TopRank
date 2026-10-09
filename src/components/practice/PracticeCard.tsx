@@ -3,7 +3,15 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { ProgressBar } from "../ui/ProgressBar";
 
-export function PracticeCard({ item }: { item: PracticeSubject }) {
+type PracticeCardItem = PracticeSubject | {
+  title: string;
+  href: string;
+  questions: number;
+  difficulty: string;
+  progress: number;
+};
+
+export function PracticeCard({ item }: { item: PracticeCardItem }) {
   return (
     <Card>
       <h2 className="practice-card-title">{item.title}</h2>

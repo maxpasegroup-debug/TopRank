@@ -1104,6 +1104,32 @@ select.input {
   box-shadow: 0 0 0 4px var(--color-brand-soft);
 }
 
+.form-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mission-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.option-card.selected {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+}
+
+.profile-detail-grid {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  color: var(--color-muted);
+}
+
 .empty-state,
 .loading-skeleton {
   display: grid;

@@ -2,7 +2,16 @@ import type { PracticeSet } from "../../data/practice";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 
-export function PracticeSetCard({ set }: { set: PracticeSet }) {
+type PracticeSetLike = PracticeSet | {
+  title: string;
+  href: string;
+  questions: number;
+  time: string;
+  difficulty: string;
+  bestScore: string;
+};
+
+export function PracticeSetCard({ set }: { set: PracticeSetLike }) {
   return (
     <Card>
       <h3 className="practice-card-title">{set.title}</h3>

@@ -1,0 +1,111 @@
+import { createHash, randomBytes } from "node:crypto";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import type { UserRole } from "@/generated/prisma/enums";
+import { prisma } from "../db";
+import { canAccessRole, type Role } from "./roles";
+
+export const SESSION_COOKIE = "toprank_session";
+export const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 14;
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+};
+
+export function createSessionToken() {
+  return randomBytes(32).toString("base64url");
+}
+
+export function hashSessionToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+export async function createSession(userId: string) {
+  const token = createSessionToken();
+  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+
+  await prisma.session.create({
+    data: {
+      userId,
+      tokenHash: hashSessionToken(token),
+      expiresAt,
+    },
+  });
+
+  return { token, expiresAt };
+}
+
+export async function revokeSession(token: string) {
+  await prisma.session.updateMany({
+    where: {
+      tokenHash: hashSessionToken(token),
+      revokedAt: null,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  });
+}
+
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+
+  if (!token) {
+    return null;
+  }
+
+  const session = await prisma.session.findFirst({
+    where: {
+      tokenHash: hashSessionToken(token),
+      revokedAt: null,
+      expiresAt: { gt: new Date() },
+      user: { status: "ACTIVE" },
+    },
+    include: { user: true },
+  });
+
+  if (!session) {
+    return null;
+  }
+
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: session.user.role,
+  };
+}
+
+export async function requireAuth() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
+}
+
+export async function requireRole(roles: readonly (UserRole | Role)[]) {
+  const user = await requireAuth();
+
+  if (!canAccessRole(user.role, roles)) {
+    redirect("/unauthorized");
+  }
+
+  return user;
+}
+
+export function sessionCookieOptions(expiresAt: Date) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    expires: expiresAt,
+  };
+}

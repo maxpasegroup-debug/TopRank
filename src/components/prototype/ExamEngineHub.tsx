@@ -1,11 +1,21 @@
 import { Button } from "../ui/Button";
 import { DemoBadge } from "../polish/DemoBadge";
 
+type MissionPlaceholder = {
+  subject: string;
+  chapter: string;
+  durationMinutes: number;
+  href: string;
+};
+
 type ExamEngineHubProps = {
   demo?: boolean;
-  studentName?: string;
-  exam?: string;
-  targetYear?: string;
+  studentName?: string | null;
+  exam?: string | null;
+  targetYear?: string | number | null;
+  dreamCollege?: string | null;
+  dailyStudyHours?: number | null;
+  mission?: MissionPlaceholder | null;
 };
 
 const supportTools = [
@@ -37,43 +47,82 @@ const supportTools = [
 
 export function ExamEngineHub({
   demo = false,
-  studentName = "Rahul",
-  exam = "NEET",
-  targetYear = "2028",
+  studentName,
+  exam,
+  targetYear,
+  dreamCollege,
+  dailyStudyHours,
+  mission,
 }: ExamEngineHubProps) {
+  const displayName = demo ? (studentName ?? "Rahul") : studentName;
+  const displayExam = demo ? (exam ?? "NEET") : exam;
+  const displayYear = demo ? (targetYear ?? "2028") : targetYear;
+  const displayGoal = demo ? (dreamCollege ?? "AIIMS Delhi") : dreamCollege;
+  const displayMission = demo
+    ? (mission ?? { subject: "Physics", chapter: "Motion", durationMinutes: 45, href: "/practice/question" })
+    : mission;
+
+  if (!demo && (!displayName || !displayExam || !displayYear || !displayGoal || !displayMission)) {
+    return (
+      <div className="exam-hub">
+        <section className="exam-hero-panel" aria-labelledby="setup-title">
+          <div className="exam-hero-copy">
+            <p className="eyebrow">Mission Control</p>
+            <h1 id="setup-title">Complete your preparation profile.</h1>
+            <p className="exam-hero-lead">
+              Your real Mission Control appears after exam, target year, goal, and study hours are saved.
+            </p>
+            <div className="exam-primary-action">
+              <Button href="/onboarding">Finish Onboarding</Button>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (!displayMission) {
+    return null;
+  }
+
   return (
     <div className="exam-hub">
       <section className="exam-hero-panel" aria-labelledby="exam-engine-title">
         <div className="exam-hero-copy">
           <div className="exam-hero-meta">
-            <span>{exam} {targetYear}</span>
+            <span>{displayExam} {displayYear}</span>
             {demo ? <DemoBadge /> : null}
           </div>
-          <p className="eyebrow">Exam Engine</p>
-          <h1 id="exam-engine-title">Hi {studentName}, start today's practice session.</h1>
+          <p className="eyebrow">Mission Control</p>
+          <h1 id="exam-engine-title">Hi {displayName}, start today's preparation mission.</h1>
           <p className="exam-hero-lead">
             TopRank opens with practice first. Learn only what helps you answer better, then return to questions.
           </p>
           <div className="exam-primary-action">
-            <Button href="/practice/question">Start Exam Practice</Button>
-            <span>Motion • 40 questions • 48 minutes</span>
+            <Button href={displayMission.href}>Continue Learning</Button>
+            <span>{displayMission.chapter} - {displayMission.durationMinutes} minutes</span>
           </div>
+          {!demo ? (
+            <div className="exam-primary-action">
+              <Button href="/mission/exam" variant="secondary">Edit Profile</Button>
+            </div>
+          ) : null}
         </div>
 
-        <div className="practice-window" aria-label="Today's practice session preview">
+        <div className="practice-window" aria-label="Today's mission preview">
           <div className="practice-window-top">
-            <span>Live Session</span>
-            <strong>Question 18 of 40</strong>
+            <span>Today's Mission</span>
+            <strong>{displayMission.durationMinutes} min</strong>
           </div>
           <div className="practice-question-preview">
-            <p>Physics • Motion</p>
-            <h2>A ball is thrown upward. Which graph best shows its velocity?</h2>
+            <p>{displayMission.subject} - {displayMission.chapter}</p>
+            <h2>Today's placeholder mission is ready from your saved preparation profile.</h2>
           </div>
           <div className="practice-options-preview">
-            <span>A</span>
-            <span>B</span>
-            <span>C</span>
-            <span>D</span>
+            <span>L</span>
+            <span>P</span>
+            <span>R</span>
+            <span>G</span>
           </div>
           <div className="practice-progress-preview">
             <span style={{ width: "45%" }} />
@@ -94,19 +143,19 @@ export function ExamEngineHub({
       <section className="exam-day-grid" aria-label="Today's focused preparation">
         <div className="exam-day-card main">
           <p className="eyebrow">Today's Goal</p>
-          <h2>Finish one serious practice set.</h2>
-          <p>Learn 12 minutes, solve 40 questions, revise 5 formulas. That is enough for today.</p>
+          <h2>{displayMission.subject}: {displayMission.chapter}</h2>
+          <p>Study for {displayMission.durationMinutes} minutes, then continue into practice when the real engine is ready.</p>
         </div>
         <div className="exam-day-card">
-          <strong>12 days</strong>
-          <span>streak</span>
+          <strong>{dailyStudyHours ? `${dailyStudyHours}h` : "Set"}</strong>
+          <span>daily study plan</span>
         </div>
         <div className="exam-day-card">
-          <strong>78%</strong>
-          <span>last accuracy</span>
+          <strong>{displayExam}</strong>
+          <span>target exam</span>
         </div>
         <div className="exam-day-card">
-          <strong>AIIMS Delhi</strong>
+          <strong>{displayGoal}</strong>
           <span>dream college path</span>
         </div>
       </section>
