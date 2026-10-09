@@ -1,5 +1,5 @@
-import { WelcomeJourney } from "./MissionFlow";
+import { JourneyWizard } from "@/components/journey/JourneyWizard";
 
 export function Onboarding() {
-  return <WelcomeJourney />;
+  return <JourneyWizard />;
 }

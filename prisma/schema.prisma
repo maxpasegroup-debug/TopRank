@@ -110,6 +110,12 @@ model User {
   schoolMemberships    SchoolMembership[]
   parentRelationships  StudentParentRelationship[] @relation("ParentRelationshipParent")
   studentRelationships StudentParentRelationship[] @relation("ParentRelationshipStudent")
+  studyPlans           StudyPlan[]
+  studySessions        StudySession[]
+  lessonProgress       StudentLessonProgress[]
+  practiceAttempts     PracticeAttempt[]
+  helpRequests         HelpRequest[]
+  auditEvents          AuditEvent[]
 
   @@index([role])
   @@index([status])
@@ -138,6 +144,10 @@ model StudentProfile {
   dreamCollege   String?
   dailyStudyMins Int?
   onboardingCompletedAt DateTime?
+  aspiration     String?
+  targetScore    String?
+  preparationStart DateTime? @db.Date
+  focusSubjectIds String[] @default([])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -223,6 +233,11 @@ model Exam {
   examSubjects    ExamSubject[]
   questionExams   QuestionExam[]
   studentProfiles StudentProfile[]
+  category        String @default("OTHER")
+  description     String?
+  officialUrl     String?
+  studyPlans      StudyPlan[]
+  practiceAttempts PracticeAttempt[]
 
   @@index([status, active])
 }
@@ -298,6 +313,7 @@ model Lesson {
   chapter   Chapter            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   resources LearningResource[]
   questions Question[]
+  studentProgress StudentLessonProgress[]
 
   @@unique([chapterId, slug])
   @@index([chapterId])
@@ -338,6 +354,7 @@ model Question {
   lessonId      String?
   explanation   String?
   solutionRef   String?
+  numericalAnswer String?
   source        String?
   sourceYear    Int?
   language      String               @default("en")
@@ -351,6 +368,7 @@ model Question {
   lesson  Lesson?          @relation(fields: [lessonId], references: [id], onDelete: SetNull)
   options QuestionOption[]
   exams   QuestionExam[]
+  attempts PracticeAttempt[]
 
   @@index([subjectId])
   @@index([chapterId])
@@ -386,6 +404,7 @@ model QuestionExam {
   active        Boolean       @default(true)
   marks         Decimal       @default(4) @db.Decimal(5, 2)
   negativeMarks Decimal       @default(1) @db.Decimal(5, 2)
+  scoringMode   PracticeScoringMode?
   sourceYear    Int?
   category      String?
   createdAt     DateTime      @default(now())
@@ -398,4 +417,142 @@ model QuestionExam {
   @@index([examId])
   @@index([questionId])
   @@index([status, active])
+}
+
+enum MissionTaskStatus {
+  TODO
+  COMPLETED
+  SKIPPED
+}
+
+model StudyPlan {
+  id           String @id @default(cuid())
+  userId       String
+  examId       String
+  title        String
+  active       Boolean @default(true)
+  startDate    DateTime @db.Date
+  dailyMinutes Int
+  requestKey   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam         Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  tasks        MissionTask[]
+  @@unique([userId, requestKey])
+  @@index([userId, active])
+}
+
+model MissionTask {
+  id           String @id @default(cuid())
+  planId       String
+  title        String
+  subject      String
+  href         String?
+  dueDate      DateTime @db.Date
+  minutes      Int
+  status       MissionTaskStatus @default(TODO)
+  completedAt  DateTime?
+  version      Int @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  plan         StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  events       MissionTaskEvent[]
+  @@index([planId, dueDate])
+}
+
+model MissionTaskEvent {
+  id        String @id @default(cuid())
+  taskId    String
+  status    MissionTaskStatus
+  dueDate   DateTime @db.Date
+  createdAt DateTime @default(now())
+  task      MissionTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  @@index([taskId, createdAt])
+}
+
+model StudySession {
+  id        String @id @default(cuid())
+  userId    String
+  requestKey String
+  topic     String
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, requestKey])
+  @@index([userId, startedAt])
+}
+
+enum PracticeScoringMode {
+  EXACT_SET
+  DECIMAL_EXACT
+}
+
+enum HelpRequestStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model HelpRequest {
+  id        String @id @default(cuid())
+  userId    String
+  requestKey String
+  subject   String
+  message   String
+  status    HelpRequestStatus @default(OPEN)
+  response  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, requestKey])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model AuditEvent {
+  id        String @id @default(cuid())
+  actorId   String
+  action    String
+  entity    String
+  entityId  String
+  createdAt DateTime @default(now())
+  actor     User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  @@index([entity, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model PracticeAttempt {
+  id           String @id @default(cuid())
+  userId       String
+  questionId   String
+  examId       String
+  requestKey   String
+  answer       Json
+  correct      Boolean
+  score        Decimal @db.Decimal(7, 2)
+  maximumScore Decimal @db.Decimal(7, 2)
+  scoringMode  PracticeScoringMode
+  explanation  String?
+  questionText String
+  submittedAt  DateTime @default(now())
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question     Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  exam         Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  @@unique([userId, requestKey])
+  @@index([userId, submittedAt])
+  @@index([userId, questionId])
+}
+
+model StudentLessonProgress {
+  id          String @id @default(cuid())
+  userId      String
+  lessonId    String
+  bookmarked  Boolean @default(false)
+  completedAt DateTime?
+  updatedAt   DateTime @updatedAt
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  @@unique([userId, lessonId])
+  @@index([userId, completedAt])
 }

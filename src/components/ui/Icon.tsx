@@ -25,6 +25,8 @@ const paths: Record<IconProps["name"], string> = {
   successMock: "M5 13l4 4L19 7",
   successMilestone: "M5 13l4 4L19 7",
   home: "M4 11l8-7 8 7v9H5v-9",
+  getHelp: "M4 5h16v11H8l-4 4V5z",
+  compete: "M7 4h10v8a5 5 0 01-10 0V4zM12 17v3M8 20h8M7 6H4v4a3 3 0 003 3M17 6h3v4a3 3 0 01-3 3",
   learn: "M5 5h10a4 4 0 014 4v10H9a4 4 0 01-4-4V5zM9 9h6M9 13h4",
   learnPhysics: "M12 4v16M8 8h8M7 16h10M5 12h14",
   learnChemistry: "M9 3h6M10 3v6l-4 8a3 3 0 003 4h6a3 3 0 003-4l-4-8V3",

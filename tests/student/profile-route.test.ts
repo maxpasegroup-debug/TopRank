@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
@@ -18,7 +18,9 @@ vi.mock("@/server/student/service", () => ({
 describe("student profile API route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("APP_URL", "http://localhost");
   });
+  afterEach(() => vi.unstubAllEnvs());
 
   it("rejects unauthenticated profile reads", async () => {
     mocks.getCurrentUser.mockResolvedValue(null);
@@ -37,11 +39,18 @@ describe("student profile API route", () => {
     const { PUT } = await import("@/app/api/student/profile/route");
     const request = new Request("http://localhost/api/student/profile", {
       method: "PUT",
+      headers: { origin: "http://localhost", "content-type": "application/json" },
       body: JSON.stringify({ targetYear: 2028 }),
     });
 
     await PUT(request);
 
     expect(mocks.updateStudentProfile).toHaveBeenCalledWith(user, { targetYear: 2028 });
+  });
+  it("rejects cross-origin profile updates without persistence", async () => {
+    mocks.getCurrentUser.mockResolvedValue({ id: "student_1", role: "STUDENT" });
+    const { PUT } = await import("@/app/api/student/profile/route");
+    const response = await PUT(new Request("http://localhost/api/student/profile", { method: "PUT", headers: { origin: "https://evil.test", "content-type": "application/json" }, body: JSON.stringify({ targetYear: 2028 }) }));
+    expect(response.status).toBe(403); expect(mocks.updateStudentProfile).not.toHaveBeenCalled();
   });
 });

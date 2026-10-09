@@ -18,15 +18,12 @@ type LearnProps = {
 const subjectColors = ["blue", "amber", "green"] as const;
 
 export function Learn({ exam, subjects }: LearnProps) {
-  const productionSubjects = subjects?.map((subject, index) => ({
-    name: subject.name,
-    href: subject.href,
-    progress: 0,
-    status: "Continue" as const,
-    color: subjectColors[index % subjectColors.length],
-  }));
-  const isProduction = Boolean(subjects);
-  const displaySubjects = isProduction ? (productionSubjects ?? []) : todaySubjects;
+  if (subjects) return <PageContainer><main className="journey-shell"><span className="journey-kicker">LEARN</span><h1>{exam?.name ?? "Your learning path"}</h1>
+    <div className="journey-actions"><Button href="/practice">Practice</Button><Button href="/progress" variant="secondary">Saved lessons</Button></div>
+    {subjects.length ? <ul className="journey-task-list">{subjects.map((subject) => <li key={subject.slug}><strong>{subject.name}</strong><Button href={subject.href} variant="secondary">Open subject</Button></li>)}</ul> : <p>No published subjects are available for your exam yet.</p>}
+  </main></PageContainer>;
+  const isProduction = false;
+  const displaySubjects = todaySubjects;
 
   return (
     <PageContainer>

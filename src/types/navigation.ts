@@ -19,6 +19,8 @@ export type ScreenKey =
   | "successMock"
   | "successMilestone"
   | "home"
+  | "getHelp"
+  | "compete"
   | "learn"
   | "learnPhysics"
   | "learnChemistry"

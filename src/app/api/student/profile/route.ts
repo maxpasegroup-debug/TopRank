@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/server/auth/session";
 import { AuthenticationApiError } from "@/server/api/errors";
 import { getStudentProfile, updateStudentProfile } from "@/server/student/service";
 import { studentProfileUpdateSchema } from "@/server/student/validation";
+import { readAuthJson, requireAuthOrigin } from "@/server/auth/request-security";
+import { AuthorizationApiError } from "@/server/api/errors";
 
 export async function GET(request: Request) {
   const requestId = getRequestId(request);
@@ -14,7 +16,7 @@ export async function GET(request: Request) {
       throw new AuthenticationApiError();
     }
 
-    return apiOk({ profile: await getStudentProfile(user) }, requestId);
+    return apiOk({ profile: await getStudentProfile(user) }, requestId, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return handleApiError(error, requestId);
   }
@@ -30,9 +32,11 @@ export async function PUT(request: Request) {
       throw new AuthenticationApiError();
     }
 
-    const input = studentProfileUpdateSchema.parse(await request.json());
+    if (user.role !== "STUDENT") throw new AuthorizationApiError("Only student accounts can access this resource");
+    requireAuthOrigin(request);
+    const input = studentProfileUpdateSchema.parse(await readAuthJson(request));
 
-    return apiOk({ profile: await updateStudentProfile(user, input) }, requestId);
+    return apiOk({ profile: await updateStudentProfile(user, input) }, requestId, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return handleApiError(error, requestId);
   }

@@ -49,7 +49,8 @@ export function handleApiError(error: unknown, requestId: string) {
     return apiFailure(error, requestId);
   }
 
-  logger.error({ err: error, requestId }, "Unhandled API error");
+  // Driver/provider errors can contain connection strings or student data.
+  logger.error({ requestId }, "Unhandled API error");
 
   return apiFailure(new ApiError(500, "INTERNAL_SERVER_ERROR", "Something went wrong"), requestId);
 }

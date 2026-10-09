@@ -15,12 +15,29 @@ export const questionImportRecordSchema = z.object({
   subjectCode: z.string().trim().min(1).max(80).regex(/^[A-Z0-9_]+$/),
   chapterSlug: z.string().trim().min(1).max(160).regex(/^[a-z0-9-]+$/),
   lessonSlug: z.string().trim().min(1).max(160).regex(/^[a-z0-9-]+$/).optional(),
-  options: z.array(optionImportSchema).min(1).max(12),
+  options: z.array(optionImportSchema).max(12).default([]),
+  numericalAnswer: z.string().trim().min(1).max(120).regex(/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/).optional(),
   exams: z.array(z.string().trim().min(1).max(80).regex(/^[A-Z0-9_]+$/)).min(1),
   explanation: z.string().trim().min(1).max(5000).optional(),
   source: z.string().trim().min(1).max(250).optional(),
   sourceYear: z.number().int().min(1900).max(2100).optional(),
   tags: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
+}).superRefine((record, context) => {
+  if (record.type === "NUMERICAL") {
+    if (!record.numericalAnswer) {
+      context.addIssue({ code: "custom", path: ["numericalAnswer"], message: "Numerical questions require a protected answer" });
+    }
+    if (record.options.length > 0) {
+      context.addIssue({ code: "custom", path: ["options"], message: "Numerical answers must not be stored as choices" });
+    }
+  } else {
+    if (record.options.length === 0) {
+      context.addIssue({ code: "custom", path: ["options"], message: "Choice questions require options" });
+    }
+    if (record.numericalAnswer !== undefined) {
+      context.addIssue({ code: "custom", path: ["numericalAnswer"], message: "Only numerical questions can have a numerical answer" });
+    }
+  }
 });
 
 export const questionImportBatchSchema = z.array(questionImportRecordSchema).min(1).max(500);
@@ -52,10 +69,6 @@ export function validateQuestionImportBatch(input: unknown): QuestionImportRecor
 
     if (record.type === "MULTIPLE_CHOICE" && correctCount < 1) {
       throw new ValidationApiError(`Multiple-choice question ${record.code} must have at least one correct option`);
-    }
-
-    if (record.type === "NUMERICAL" && correctCount !== 1) {
-      throw new ValidationApiError(`Numerical question ${record.code} must have exactly one correct answer`);
     }
   }
 

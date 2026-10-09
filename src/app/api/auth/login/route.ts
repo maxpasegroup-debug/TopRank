@@ -5,12 +5,16 @@ import { loginSchema } from "@/server/auth/validation";
 import { verifyPassword } from "@/server/auth/password";
 import { prisma } from "@/server/db";
 import { logger } from "@/server/logger";
+import { AuthThrottleError, enforceAuthIdentityRateLimit, enforceAuthRateLimit, readAuthJson, requireAuthOrigin } from "@/server/auth/request-security";
 
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
 
   try {
-    const body = loginSchema.parse(await request.json());
+    requireAuthOrigin(request);
+    await enforceAuthRateLimit("login");
+    const body = loginSchema.parse(await readAuthJson(request));
+    await enforceAuthIdentityRateLimit("login", request, body.email);
     const user = await prisma.user.findUnique({ where: { email: body.email } });
 
     if (!user || user.status !== "ACTIVE") {
@@ -31,6 +35,8 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    return handleApiError(error, requestId);
+    const response = handleApiError(error, requestId);
+    if (error instanceof AuthThrottleError) response.headers.set("Retry-After", String(error.retryAfterSeconds));
+    return response;
   }
 }

@@ -1,58 +1,19 @@
-import { LessonCard } from "../../components/learning/LessonCard";
-import { ResourceCard } from "../../components/learning/ResourceCard";
-import { TeacherCard } from "../../components/learning/TeacherCard";
 import { Button } from "../../components/ui/Button";
-import { Card } from "../../components/ui/Card";
 import { PageContainer } from "../../components/ui/PageContainer";
-import { SectionHeader } from "../../components/ui/SectionHeader";
-import { downloads } from "../../data/learning";
 import type { LessonDetailDto } from "../../server/content/service";
+import { LessonActions } from "@/components/journey/LessonActions";
 
 type LessonExperienceProps = {
   lesson?: LessonDetailDto;
 };
 
 export function LessonExperience({ lesson }: LessonExperienceProps) {
-  const resources = lesson?.resources.map((resource) => ({
-    title: resource.title,
-    type: resource.type,
-    detail: resource.reference ?? resource.url ?? "Published learning resource",
-    href: resource.url ?? lesson.href,
-  })) ?? downloads;
-
-  return (
-    <PageContainer>
-      <div className="screen-stack">
-        <SectionHeader
-          eyebrow="Lesson"
-          title={lesson ? `${lesson.chapter.title}: ${lesson.title}` : "Motion: Distance and Displacement"}
-          subtitle={lesson?.summary ?? "Prototype lesson screen. Video, bookmarks, and completion are mock actions."}
-          action={<Button href={lesson?.chapter.href ?? "/learn/physics"}>Back to Chapter</Button>}
-        />
-        <div className="video-placeholder">
-          <div>
-            <p className="eyebrow">Video Placeholder</p>
-            <h2>Concept lesson preview</h2>
-          </div>
-        </div>
-        <TeacherCard />
-        <div className="grid grid-2">
-          <LessonCard title="Quick notes" text={lesson?.summary ?? "Distance is total path covered. Displacement is shortest change in position."} />
-          <LessonCard title="Content status" text={lesson ? "Published foundation lesson from PostgreSQL." : "Tap later to save this lesson. Prototype only."} />
-        </div>
-        <SectionHeader eyebrow="Downloads" title="Study resources" />
-        <div className="grid grid-3">
-          {resources.slice(0, 3).map((resource) => (
-            <ResourceCard resource={resource} key={resource.title} />
-          ))}
-        </div>
-        <Card soft>
-          <div className="lesson-actions">
-            <Button href="/success/lesson" variant="secondary">Mark Complete</Button>
-            <Button href="/learn/physics">Next Lesson</Button>
-          </div>
-        </Card>
-      </div>
-    </PageContainer>
-  );
+  if (lesson) return <PageContainer><main className="journey-shell">
+    <span className="journey-kicker">{lesson.subject.name} / {lesson.chapter.title}</span>
+    <h1>{lesson.title}</h1><p>{lesson.summary}</p>
+    <Button href={lesson.chapter.href}>Back to chapter</Button>
+    <section><h2>Study resources</h2>{lesson.resources.length ? <ul className="journey-task-list">{lesson.resources.map((resource) => <li key={resource.slug}><div><strong>{resource.title}</strong><span>{resource.type}</span>{resource.reference && <p>{resource.reference}</p>}</div>{resource.url ? <a href={resource.url} target="_blank" rel="noopener noreferrer">Open resource</a> : <span>Resource link unavailable</span>}</li>)}</ul> : <p>No published resources yet.</p>}</section>
+    <LessonActions lessonId={lesson.id} />
+  </main></PageContainer>;
+  return <PageContainer><main className="journey-shell"><h1>Lesson unavailable</h1><Button href="/learn">Back to learning</Button></main></PageContainer>;
 }

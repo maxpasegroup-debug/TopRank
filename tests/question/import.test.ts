@@ -38,4 +38,42 @@ describe("question import validation", () => {
 
     expect(() => validateQuestionImportBatch([invalid])).toThrow(ValidationApiError);
   });
+
+  it("accepts a protected numerical answer without options", () => {
+    const { options: _options, ...record } = validQuestion;
+    const [result] = validateQuestionImportBatch([{ ...record, type: "NUMERICAL", numericalAnswer: "-1.250e+2" }]);
+    expect(result.options).toEqual([]);
+    expect(result.numericalAnswer).toBe("-1.250e+2");
+  });
+
+  it("rejects legacy numerical answer options even with a protected key", () => {
+    expect(() => validateQuestionImportBatch([{
+      ...validQuestion, type: "NUMERICAL", numericalAnswer: "4",
+      options: [{ code: "NUMERIC", text: "4", isCorrect: true }],
+    }])).toThrow();
+  });
+
+  it("requires a protected numerical answer", () => {
+    expect(() => validateQuestionImportBatch([{ ...validQuestion, type: "NUMERICAL", options: [] }])).toThrow();
+  });
+
+  it.each(["", "NaN", "Infinity", "1 to 2", "4 kg"])("rejects malformed numerical key %s", (numericalAnswer) => {
+    expect(() => validateQuestionImportBatch([{ ...validQuestion, type: "NUMERICAL", options: [], numericalAnswer }])).toThrow();
+  });
+
+  it("rejects numerical keys on choice questions", () => {
+    expect(() => validateQuestionImportBatch([{ ...validQuestion, numericalAnswer: "4" }])).toThrow();
+  });
+
+  it("still requires multiple-choice options and correct choices", () => {
+    expect(() => validateQuestionImportBatch([{ ...validQuestion, type: "MULTIPLE_CHOICE", options: [] }])).toThrow();
+    expect(() => validateQuestionImportBatch([{
+      ...validQuestion, type: "MULTIPLE_CHOICE", options: validQuestion.options.map((option) => ({ ...option, isCorrect: false })),
+    }])).toThrow();
+    expect(validateQuestionImportBatch([{ ...validQuestion, type: "MULTIPLE_CHOICE" }])).toHaveLength(1);
+  });
+
+  it("rejects unsupported imported question types", () => {
+    expect(() => validateQuestionImportBatch([{ ...validQuestion, type: "FREE_TEXT" }])).toThrow();
+  });
 });

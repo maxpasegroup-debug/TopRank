@@ -1,4 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { GetHelp } from "@/components/journey/GetHelp";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { ToastStack } from "@/components/polish/Toast";
 import { ProductTour } from "@/components/demo/ProductTour";
 import { PresenterPanel } from "@/components/demo/PresenterPanel";
@@ -62,12 +64,12 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
     }
 
     if (learningPath.kind === "chapter") {
-      const data = await listLessonsForChapter(learningPath.chapterSlug);
+      const data = await listLessonsForChapter(learningPath.chapterSlug, learningPath.subjectSlug);
       return <ChapterLessons subject={data.subject} chapter={data.chapter} lessons={data.lessons} />;
     }
 
     if (learningPath.kind === "lesson") {
-      return <LessonExperience lesson={await getLessonDetail(learningPath.lessonSlug)} />;
+      return <LessonExperience lesson={await getLessonDetail(learningPath.lessonSlug, learningPath)} />;
     }
   }
 
@@ -88,6 +90,8 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
   }
 
   switch (screen) {
+    case "getHelp": return <PageContainer><GetHelp /></PageContainer>;
+    case "compete": return <PageContainer><main className="journey-shell"><h1>Compete</h1><p>No published challenges yet.</p><a href="/practice">Continue practice</a></main></PageContainer>;
     case "login":
       return <AuthPage mode="login" />;
     case "signup":
@@ -95,7 +99,6 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
     case "onboarding":
       return <Onboarding />;
     case "welcome":
-      return <WelcomeJourney />;
     case "missionExam":
     case "missionYear":
     case "missionCollege":
@@ -103,9 +106,9 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
       if (!context.user) {
         redirect("/login");
       }
-      return <MissionFlow screen={screen} exams={await listSupportedExams()} profile={await getStudentProfile(context.user)} />;
+      redirect("/onboarding");
     case "missionReady":
-      return <MissionReady />;
+      redirect("/home");
     case "demoStart":
       return <DemoStart />;
     case "demo":
@@ -113,17 +116,12 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
     case "presentationSummary":
       return <PresentationSummary />;
     case "successLesson":
-      return <SuccessState type="lesson" />;
     case "successPractice":
-      return <SuccessState type="practice" />;
     case "successWeek":
-      return <SuccessState type="week" />;
     case "successStreak":
-      return <SuccessState type="streak" />;
     case "successMock":
-      return <SuccessState type="mock" />;
     case "successMilestone":
-      return <SuccessState type="milestone" />;
+      redirect("/progress");
     case "home":
       if (!context.user) {
         redirect("/login");
@@ -143,11 +141,10 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
     case "lessonMotion":
       return <LessonExperience />;
     case "learnRevision":
-      return <Revision />;
+      redirect("/progress");
     case "learnDownloads":
-      return <Downloads />;
     case "learnSearch":
-      return <LearnSearch />;
+      redirect("/learn");
     case "practice":
       if (!context.user) {
         redirect("/login");
@@ -161,48 +158,36 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
       }
       return <QuestionExperience question={(await listQuestions({ exam: (await getStudentPracticeHome(context.user)).exam?.code })).at(0) ?? null} />;
     case "practiceComplete":
-      return <PracticeComplete />;
     case "practiceReview":
       return <PracticeReview />;
     case "practiceMockTests":
-      return <MockTests />;
+      return <PageContainer><main className="journey-shell"><h1>Mock exams</h1><p>No verified mock exams are available yet.</p><a href="/practice">Continue practice</a></main></PageContainer>;
     case "practicePapers":
-      return <PreviousYearPapers />;
+      return <PageContainer><main className="journey-shell"><h1>Previous-year papers</h1><p>No reviewed papers are available yet.</p><a href="/practice">Continue practice</a></main></PageContainer>;
     case "progress":
       return <Progress />;
     case "tara":
-      return <Tara />;
     case "taraChatStudy":
-      return <TaraChat chat="study" />;
     case "taraChatMotivate":
-      return <TaraChat chat="motivate" />;
     case "taraChatPlan":
-      return <TaraChat chat="plan" />;
     case "taraChatRevise":
-      return <TaraChat chat="revise" />;
     case "taraChatConcept":
-      return <TaraChat chat="concept" />;
     case "taraChatAsk":
-      return <TaraChat chat="ask" />;
     case "taraMoodGreat":
-      return <TaraMood mood="great" />;
     case "taraMoodOkay":
-      return <TaraMood mood="okay" />;
     case "taraMoodStressed":
-      return <TaraMood mood="stressed" />;
     case "taraMoodTired":
-      return <TaraMood mood="tired" />;
     case "taraReflection":
-      return <TaraReflection />;
+      redirect("/get-help");
     case "me":
       if (!context.user) {
         redirect("/login");
       }
       return <Me profile={await getStudentProfile(context.user)} />;
     case "parentPreview":
-      return <ParentPreview />;
+      return <PageContainer><main className="journey-shell"><h1>Parent workspace</h1><p>Student reports are unavailable until consent and relationship verification are implemented.</p></main></PageContainer>;
     case "schoolPreview":
-      return <SchoolPreview />;
+      return <PageContainer><main className="journey-shell"><h1>School workspace</h1><p>Student reports are unavailable until verified school enrolment and tenant boundaries are implemented.</p></main></PageContainer>;
     case "settings":
       return <Settings />;
     case "landing":
@@ -273,12 +258,14 @@ function parsePracticeContentPath(pathname: string) {
 }
 
 function isStudentOnboardingPath(screen: ScreenKey) {
-  return screen === "onboarding" || screen === "missionExam" || screen === "missionYear" || screen === "missionCollege" || screen === "missionHours" || screen === "missionReady";
+  return screen === "onboarding" || screen === "welcome" || screen === "missionExam" || screen === "missionYear" || screen === "missionCollege" || screen === "missionHours" || screen === "missionReady";
 }
 
 function isStudentAppScreen(screen: ScreenKey) {
   return [
     "home",
+    "getHelp",
+    "compete",
     "learn",
     "learnPhysics",
     "learnChemistry",
@@ -355,12 +342,8 @@ export default async function Page({ params }: { params: Promise<{ path?: string
   if (user?.role === "STUDENT") {
     const status = await getOnboardingStatus(user);
 
-    if (route.screen === "onboarding" && status.completed) {
-      redirect("/home");
-    }
-
     if (route.screen === "missionReady" && !status.completed) {
-      redirect("/mission/exam");
+      redirect("/onboarding");
     }
 
     if ((isLearningContent || isPracticeContent || isStudentAppScreen(route.screen)) && !status.completed) {

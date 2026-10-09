@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { getEnv } from "../src/server/env";
+import { validateQuestionImportBatch } from "../src/server/question/import";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: getEnv().DATABASE_URL }),
@@ -46,6 +47,7 @@ type QuestionSeed = {
   chapterSlug: string;
   lessonSlug?: string;
   options: { code: string; text: string; isCorrect: boolean }[];
+  numericalAnswer?: string;
   exams: string[];
   explanation: string;
   source: string;
@@ -113,7 +115,8 @@ const questionSeed: QuestionSeed[] = [
     subjectCode: "CHEMISTRY",
     chapterSlug: "some-basic-concepts-of-chemistry",
     lessonSlug: "mole-concept-basics",
-    options: [{ code: "NUMERIC", text: "1", isCorrect: true }],
+    options: [],
+    numericalAnswer: "1",
     exams: ["NEET", "JEE_MAIN", "JEE_ADVANCED", "KEAM"],
     explanation: "Moles = given mass / molar mass = 18 / 18 = 1.",
     source: "TopRank foundation seed",
@@ -283,7 +286,7 @@ async function main() {
     }
   }
 
-  for (const item of questionSeed) {
+  for (const item of validateQuestionImportBatch(questionSeed)) {
     const subject = subjectByCode.get(item.subjectCode);
     if (!subject) continue;
 
@@ -308,6 +311,7 @@ async function main() {
         chapterId: chapter.id,
         lessonId: lesson?.id,
         explanation: item.explanation,
+        numericalAnswer: item.numericalAnswer ?? null,
         source: item.source,
         language: "en",
         reviewStatus: "REVIEWED",
@@ -324,6 +328,7 @@ async function main() {
         chapterId: chapter.id,
         lessonId: lesson?.id,
         explanation: item.explanation,
+        numericalAnswer: item.numericalAnswer ?? null,
         source: item.source,
         language: "en",
         reviewStatus: "REVIEWED",
@@ -332,6 +337,13 @@ async function main() {
         active: true,
       },
     });
+
+    if (item.type === "NUMERICAL") {
+      await prisma.questionOption.updateMany({
+        where: { questionId: question.id },
+        data: { active: false },
+      });
+    }
 
     for (const [index, option] of item.options.entries()) {
       await prisma.questionOption.upsert({

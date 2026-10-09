@@ -10,7 +10,7 @@ export const studentProfileUpdateSchema = z.object({
   dreamCollege: z.string().trim().min(2).max(160).optional(),
   dailyStudyHours: z.coerce.number().min(0.5).max(12).optional(),
   completeOnboarding: z.boolean().optional(),
-});
+}).strict();
 
 export type StudentProfileUpdateInput = z.infer<typeof studentProfileUpdateSchema>;
 

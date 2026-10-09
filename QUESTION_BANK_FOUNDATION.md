@@ -46,10 +46,19 @@ All APIs require an authenticated `STUDENT` user.
 ## Security Rules
 
 - `QuestionOption.isCorrect` is stored only server-side and is never returned by student APIs.
+- `Question.numericalAnswer` stores the protected numerical key as text; student queries never select it and numerical DTOs always contain `options: []`, including legacy records.
+- New numerical imports require `numericalAnswer` and forbid answer-bearing options. Choice imports retain their existing option/answer-key validation.
+- Student question reads require `PUBLISHED`, `active`, and `REVIEWED`. Unknown question types fail with a generic validation error.
 - `Question.explanation` and `Question.solutionRef` are not returned by student APIs in this phase.
 - `QuestionExam.marks` and `QuestionExam.negativeMarks` are stored but not returned to students.
 - Draft, archived, inactive, or unmapped questions are excluded from student APIs.
 - Demo fixture data is not used as a production fallback when real practice data is requested.
+
+## Numerical Answer Migration
+
+`20261009000100_protected_numerical_answers` adds the nullable protected field. It copies a legacy key only when there is exactly one active correct option with a valid numeric text value. Published numerical records without an unambiguous key become draft/needs-review. Legacy option rows are retained but deactivated, not deleted. Apply only through a separately reviewed deployment after database backup and migration testing; this change does not apply the migration or run the seed.
+
+Numerical import syntax accepts signed decimal/scientific-notation text without converting it to floating point. This is storage validation, not a scoring policy. Accepted formats, units, precision, rounding, ranges, and tolerance must be defined separately for each applicable exam/question type before scoring is implemented.
 
 ## What Does Not Exist Yet
 

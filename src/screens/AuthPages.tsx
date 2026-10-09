@@ -56,14 +56,6 @@ export function AuthPage({ mode }: AuthPageProps) {
           {!isLogin ? <input className="input" name="name" placeholder="Name" aria-label="Name" required /> : null}
           <input className="input" name="email" placeholder="Email" aria-label="Email" type="email" required />
           <input className="input" name="password" placeholder="Password" aria-label="Password" type="password" required minLength={8} />
-          {!isLogin ? (
-            <select className="input" name="role" aria-label="Role" defaultValue="STUDENT">
-              <option value="STUDENT">Student</option>
-              <option value="PARENT">Parent</option>
-              <option value="TEACHER">Teacher</option>
-              <option value="SCHOOL_ADMIN">School Admin</option>
-            </select>
-          ) : null}
           {error ? <p className="form-error" role="alert">{error}</p> : null}
           <button className="button button-primary" type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Please wait..." : "Continue"}

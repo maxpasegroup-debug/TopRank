@@ -23,6 +23,14 @@ describe("auth validation", () => {
     ).toThrow();
   });
 
+  it("accepts an explicit student role", () => {
+    expect(signupSchema.parse({ name: "Rahul", email: "rahul@example.com", password: "password123", role: "STUDENT" }).role).toBe("STUDENT");
+  });
+
+  it.each(["PLATFORM_ADMIN", "TEACHER", "PARENT", "SCHOOL_ADMIN"])("rejects public signup with role %s", (role) => {
+    expect(() => signupSchema.parse({ name: "Rahul", email: "rahul@example.com", password: "password123", role })).toThrow();
+  });
+
   it("validates login input", () => {
     expect(loginSchema.parse({ email: "a@b.com", password: "secret" })).toEqual({
       email: "a@b.com",

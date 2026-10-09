@@ -69,6 +69,7 @@ describe("question service", () => {
       where: expect.objectContaining({
         status: "PUBLISHED",
         active: true,
+        reviewStatus: "REVIEWED",
         difficulty: "EASY",
         type: "SINGLE_CHOICE",
         subject: expect.objectContaining({ status: "PUBLISHED", active: true, slug: "physics" }),
@@ -101,6 +102,30 @@ describe("question service", () => {
     const { getQuestion } = await import("@/server/question/service");
 
     await expect(getQuestion("missing")).rejects.toBeInstanceOf(ValidationApiError);
+  });
+
+  it("omits protected fields from the student query", async () => {
+    mocks.prisma.question.findMany.mockResolvedValue([questionRecord]);
+    const { listQuestions } = await import("@/server/question/service");
+    await listQuestions();
+    const select = mocks.prisma.question.findMany.mock.calls[0][0].select;
+    expect(select).not.toHaveProperty("numericalAnswer");
+    expect(select).not.toHaveProperty("explanation");
+    expect(select).not.toHaveProperty("solutionRef");
+    expect(select.options.select).not.toHaveProperty("isCorrect");
+  });
+
+  it("allowlists nested records even when a query returns extra answer metadata", async () => {
+    mocks.prisma.question.findMany.mockResolvedValue([{
+      ...questionRecord,
+      numericalAnswer: "protected-key-marker",
+      subject: { ...questionRecord.subject, numericalAnswer: "protected-key-marker" },
+      chapter: { ...questionRecord.chapter, explanation: "protected-key-marker" },
+      lesson: { ...questionRecord.lesson, solutionRef: "protected-key-marker" },
+      exams: [{ exam: { ...questionRecord.exams[0].exam, marks: "protected-key-marker" } }],
+    }]);
+    const { listQuestions } = await import("@/server/question/service");
+    expect(JSON.stringify(await listQuestions())).not.toContain("protected-key-marker");
   });
 
   it("rejects unauthorized non-student roles", async () => {

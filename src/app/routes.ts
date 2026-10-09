@@ -10,9 +10,9 @@ export type RouteConfig = {
 export const navigationRoutes: RouteConfig[] = [
   { path: "/home", label: "Home", screen: "home", isAppRoute: true },
   { path: "/learn", label: "Learn", screen: "learn", isAppRoute: true },
-  { path: "/practice", label: "Practice", screen: "practice", isAppRoute: true },
-  { path: "/progress", label: "Progress", screen: "progress", isAppRoute: true },
-  { path: "/tara", label: "Tara", screen: "tara", isAppRoute: true },
+  { path: "/get-help", label: "Get Help", screen: "getHelp", isAppRoute: true },
+  { path: "/compete", label: "Compete", screen: "compete", isAppRoute: true },
+  { path: "/progress", label: "My Progress", screen: "progress", isAppRoute: true },
   { path: "/me", label: "Me", screen: "me", isAppRoute: true },
 ];
 
@@ -37,6 +37,8 @@ export const allRoutes: RouteConfig[] = [
   { path: "/success/mock", label: "Mock test", screen: "successMock", isAppRoute: true },
   { path: "/success/milestone", label: "Milestone", screen: "successMilestone", isAppRoute: true },
   ...navigationRoutes,
+  { path: "/practice", label: "Practice", screen: "practice", isAppRoute: true },
+  { path: "/tara", label: "SIA", screen: "tara", isAppRoute: true },
   { path: "/learn/physics", label: "Physics", screen: "learnPhysics", isAppRoute: true },
   { path: "/learn/chemistry", label: "Chemistry", screen: "learnChemistry", isAppRoute: true },
   { path: "/learn/biology", label: "Biology", screen: "learnBiology", isAppRoute: true },

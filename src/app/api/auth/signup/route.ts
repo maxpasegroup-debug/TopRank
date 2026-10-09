@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { ConflictApiError } from "@/server/api/errors";
 import { apiOk, getRequestId, handleApiError } from "@/server/api/responses";
 import { createSession, sessionCookieOptions, SESSION_COOKIE } from "@/server/auth/session";
@@ -6,12 +5,16 @@ import { signupSchema } from "@/server/auth/validation";
 import { hashPassword } from "@/server/auth/password";
 import { prisma } from "@/server/db";
 import { logger } from "@/server/logger";
+import { AuthThrottleError, enforceAuthIdentityRateLimit, enforceAuthRateLimit, readAuthJson, requireAuthOrigin } from "@/server/auth/request-security";
 
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
 
   try {
-    const body = signupSchema.parse(await request.json());
+    requireAuthOrigin(request);
+    await enforceAuthRateLimit("signup");
+    const body = signupSchema.parse(await readAuthJson(request));
+    await enforceAuthIdentityRateLimit("signup", request, body.email);
     const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
 
     if (existingUser) {
@@ -26,17 +29,11 @@ export async function POST(request: Request) {
           email: body.email,
           name: body.name,
           passwordHash,
-          role: body.role,
+          role: "STUDENT",
         },
       });
 
-      if (createdUser.role === "STUDENT") {
-        await tx.studentProfile.create({ data: { userId: createdUser.id } });
-      } else if (createdUser.role === "PARENT") {
-        await tx.parentProfile.create({ data: { userId: createdUser.id } });
-      } else if (createdUser.role === "TEACHER") {
-        await tx.teacherProfile.create({ data: { userId: createdUser.id } });
-      }
+      await tx.studentProfile.create({ data: { userId: createdUser.id } });
 
       return createdUser;
     });
@@ -51,6 +48,8 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    return handleApiError(error, requestId);
+    const response = handleApiError(error, requestId);
+    if (error instanceof AuthThrottleError) response.headers.set("Retry-After", String(error.retryAfterSeconds));
+    return response;
   }
 }

@@ -15,9 +15,13 @@ type PracticeProps = {
 };
 
 export function Practice({ exam, subjects }: PracticeProps) {
-  const hasRealSubjects = Array.isArray(subjects);
-  const practiceItems = hasRealSubjects ? subjects : practiceSubjects;
-  const firstQuestionHref = subjects?.find((subject) => subject.questions > 0)?.href ?? "/practice/question";
+  if (subjects) return <PageContainer><main className="journey-shell"><span className="journey-kicker">PRACTICE</span><h1>{exam?.name ?? "Your practice bank"}</h1>
+    <div className="journey-actions"><Button href="/practice/review" variant="secondary">Attempt history</Button><Button href="/learn" variant="secondary">Back to learning</Button></div>
+    {subjects.length ? <ul className="journey-task-list">{subjects.map((subject) => <li key={subject.slug}><div><strong>{subject.title}</strong><span>{subject.questions} published questions</span></div><Button href={subject.href} variant="secondary">Open questions</Button></li>)}</ul> : <p>No published questions are available for your exam yet.</p>}
+  </main></PageContainer>;
+  const hasRealSubjects = false;
+  const practiceItems = practiceSubjects;
+  const firstQuestionHref = "/practice/question";
 
   return (
     <PageContainer>

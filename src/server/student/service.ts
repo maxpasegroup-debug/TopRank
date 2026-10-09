@@ -105,7 +105,7 @@ export async function listSupportedExams(): Promise<SupportedExamDto[]> {
   const exams = await prisma.exam.findMany({
     where: {
       status: "PUBLISHED",
-      code: { in: [...supportedExamCodes] },
+      active: true,
     },
     orderBy: [{ code: "asc" }],
   });
@@ -138,7 +138,7 @@ export async function updateStudentProfile(user: AuthUser, input: StudentProfile
       where: {
         id: input.targetExamId,
         status: "PUBLISHED",
-        code: { in: [...supportedExamCodes] },
+        active: true,
       },
     });
 
@@ -190,9 +190,11 @@ export async function updateStudentProfile(user: AuthUser, input: StudentProfile
 
 export async function getMissionControl(user: AuthUser) {
   const profile = await getStudentProfile(user);
+  const task = await prisma.missionTask.findFirst({ where: { plan: { userId: user.id, active: true }, status: "TODO" },
+    orderBy: [{ dueDate: "asc" }, { id: "asc" }], select: { subject: true, title: true, minutes: true, href: true } });
 
   return {
     profile,
-    mission: createMissionPlaceholder(profile),
+    mission: task?.href ? { subject: task.subject, chapter: task.title, durationMinutes: task.minutes, href: task.href } : null,
   };
 }

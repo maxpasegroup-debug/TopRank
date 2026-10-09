@@ -122,6 +122,14 @@ describe("content service", () => {
 
     expect(() => requireStudentContentAccess(parent)).toThrow(AuthorizationApiError);
   });
+  it("resolves lesson paths within their actual chapter and subject", async () => {
+    mocks.prisma.lesson.findFirst.mockResolvedValue(null);
+    const { getLessonDetail } = await import("@/server/content/service");
+    await expect(getLessonDetail("shared-slug", { subjectSlug: "biology", chapterSlug: "cells" })).rejects.toBeInstanceOf(ValidationApiError);
+    expect(mocks.prisma.lesson.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({
+      chapter: { status: "PUBLISHED", active: true, slug: "cells", subject: { status: "PUBLISHED", active: true, slug: "biology" } },
+    }) }));
+  });
 
   it("uses the authenticated student's selected exam for learning home", async () => {
     mocks.prisma.studentProfile.findUnique.mockResolvedValue({ targetExam: { code: "NEET" } });

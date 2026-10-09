@@ -3,6 +3,7 @@ import { Button } from "../../components/ui/Button";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { PageContainer } from "../../components/ui/PageContainer";
 import type { StudentQuestionDto } from "../../server/question/service";
+import { AnswerSubmission } from "@/components/practice/AnswerSubmission";
 
 export function QuestionExperience({ question }: { question?: StudentQuestionDto | null }) {
   if (!question) {
@@ -17,6 +18,7 @@ export function QuestionExperience({ question }: { question?: StudentQuestionDto
     <PageContainer>
       <div className="question-screen">
         <QuestionCard question={question} />
+        <AnswerSubmission key={question.id} question={question} />
         <div className="question-actions">
           <Button href={`/practice/subjects/${question.subject.slug}/questions`} variant="secondary">
             Back to Questions

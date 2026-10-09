@@ -33,6 +33,7 @@ const mocks = vi.hoisted(() => {
       studentProfile: {
         findUnique: vi.fn(),
       },
+      missionTask: { findFirst: vi.fn() },
       $transaction: vi.fn(),
     },
     tx: {
@@ -68,6 +69,7 @@ describe("student service", () => {
     mocks.prisma.exam.findFirst.mockResolvedValue(mocks.exam);
     mocks.prisma.exam.findMany.mockResolvedValue([mocks.exam]);
     mocks.prisma.studentProfile.findUnique.mockResolvedValue({ ...mocks.profile });
+    mocks.prisma.missionTask.findFirst.mockResolvedValue(null);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.tx));
     mocks.tx.studentProfile.upsert.mockResolvedValue({
       ...mocks.profile,
@@ -94,7 +96,7 @@ describe("student service", () => {
     });
 
     expect(mocks.prisma.exam.findFirst).toHaveBeenCalledWith({
-      where: { id: mocks.exam.id, status: "PUBLISHED", code: { in: ["NEET", "JEE_MAIN", "JEE_ADVANCED", "KEAM", "CUET"] } },
+      where: { id: mocks.exam.id, status: "PUBLISHED", active: true },
     });
     expect(mocks.tx.studentProfile.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: student.id } }));
     expect(profile.targetExam?.code).toBe("NEET");
@@ -130,6 +132,7 @@ describe("student service", () => {
   });
 
   it("creates Mission Control from the authenticated student's data", async () => {
+    mocks.prisma.missionTask.findFirst.mockResolvedValue({ subject: "Biology", title: "Cell structure", minutes: 45, href: "/learn/biology/cells/structure" });
     mocks.prisma.studentProfile.findUnique.mockResolvedValue({
       ...mocks.profile,
       user: { ...mocks.studentUser, name: "Anu" },
@@ -143,7 +146,8 @@ describe("student service", () => {
     const result = await getMissionControl(student);
 
     expect(result.profile.name).toBe("Anu");
-    expect(result.mission).toMatchObject({ subject: "Physics", chapter: "Motion" });
+    expect(result.mission).toMatchObject({ subject: "Biology", chapter: "Cell structure" });
+    expect(mocks.prisma.missionTask.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { plan: { userId: student.id, active: true }, status: "TODO" } }));
   });
 
   it("does not fall back to Rahul demo data for incomplete production profiles", async () => {

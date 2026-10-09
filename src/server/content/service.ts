@@ -1,6 +1,7 @@
 import { AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { safeResourceUrl } from "./resource-url";
 
 const publishedActive = {
   status: "PUBLISHED" as const,
@@ -46,6 +47,7 @@ export type ContentResourceDto = {
 };
 
 export type LessonDetailDto = ContentLessonDto & {
+  id: string;
   chapter: ContentChapterDto;
   subject: ContentSubjectDto;
   resources: ContentResourceDto[];
@@ -139,9 +141,9 @@ export async function listChaptersForSubject(subjectSlug: string): Promise<{ sub
   };
 }
 
-export async function listLessonsForChapter(chapterSlug: string): Promise<{ subject: ContentSubjectDto; chapter: ContentChapterDto; lessons: ContentLessonDto[] }> {
+export async function listLessonsForChapter(chapterSlug: string, subjectSlug?: string): Promise<{ subject: ContentSubjectDto; chapter: ContentChapterDto; lessons: ContentLessonDto[] }> {
   const chapter = await prisma.chapter.findFirst({
-    where: { slug: chapterSlug, ...publishedActive, subject: publishedActive },
+    where: { slug: chapterSlug, ...publishedActive, subject: { ...publishedActive, slug: subjectSlug } },
     select: {
       title: true,
       slug: true,
@@ -183,10 +185,11 @@ export async function listLessonsForChapter(chapterSlug: string): Promise<{ subj
   };
 }
 
-export async function getLessonDetail(lessonSlug: string): Promise<LessonDetailDto> {
+export async function getLessonDetail(lessonSlug: string, path?: { subjectSlug: string; chapterSlug: string }): Promise<LessonDetailDto> {
   const lesson = await prisma.lesson.findFirst({
-    where: { slug: lessonSlug, ...publishedActive, chapter: { ...publishedActive, subject: publishedActive } },
+    where: { slug: lessonSlug, ...publishedActive, chapter: { ...publishedActive, slug: path?.chapterSlug, subject: { ...publishedActive, slug: path?.subjectSlug } } },
     select: {
+      id: true,
       title: true,
       slug: true,
       summary: true,
@@ -228,6 +231,7 @@ export async function getLessonDetail(lessonSlug: string): Promise<LessonDetailD
   };
 
   return {
+    id: lesson.id,
     title: lesson.title,
     slug: lesson.slug,
     summary: lesson.summary,
@@ -235,7 +239,7 @@ export async function getLessonDetail(lessonSlug: string): Promise<LessonDetailD
     href: `/learn/${lesson.chapter.subject.slug}/${lesson.chapter.slug}/${lesson.slug}`,
     subject,
     chapter,
-    resources: lesson.resources,
+    resources: lesson.resources.map((resource) => ({ ...resource, url: safeResourceUrl(resource.url) })),
   };
 }
 

@@ -60,6 +60,7 @@ type QuestionRecord = {
   exams: { exam: { code: string; name: string } }[];
   explanation?: string | null;
   solutionRef?: string | null;
+  numericalAnswer?: string | null;
 };
 
 export function requireStudentQuestionAccess(user: AuthUser | null) {
@@ -77,6 +78,7 @@ export function requireStudentQuestionAccess(user: AuthUser | null) {
 function questionWhere(filters: QuestionFilter = {}) {
   return {
     ...publishedActive,
+    reviewStatus: "REVIEWED" as const,
     difficulty: filters.difficulty,
     type: filters.type,
     subject: { ...publishedActive, slug: filters.subject },
@@ -98,15 +100,13 @@ function questionSelect() {
     type: true,
     difficulty: true,
     tags: true,
-    explanation: true,
-    solutionRef: true,
     subject: { select: { code: true, name: true, slug: true } },
     chapter: { select: { title: true, slug: true } },
     lesson: { select: { title: true, slug: true } },
     options: {
       where: { active: true },
       orderBy: { order: "asc" as const },
-      select: { id: true, code: true, text: true, order: true, isCorrect: true },
+      select: { id: true, code: true, text: true, order: true },
     },
     exams: {
       where: publishedActive,
@@ -117,18 +117,22 @@ function questionSelect() {
 }
 
 export function sanitizeStudentQuestion(question: QuestionRecord): StudentQuestionDto {
+  if (!["SINGLE_CHOICE", "MULTIPLE_CHOICE", "NUMERICAL"].includes(question.type)) {
+    throw new ValidationApiError("Practice question was not found");
+  }
+
   return {
     id: question.id,
     code: question.code,
     text: question.text,
     type: question.type,
     difficulty: question.difficulty,
-    subject: question.subject,
-    chapter: question.chapter,
-    lesson: question.lesson,
-    exams: question.exams.map((item) => item.exam),
+    subject: { code: question.subject.code, name: question.subject.name, slug: question.subject.slug },
+    chapter: { title: question.chapter.title, slug: question.chapter.slug },
+    lesson: question.lesson ? { title: question.lesson.title, slug: question.lesson.slug } : null,
+    exams: question.exams.map(({ exam }) => ({ code: exam.code, name: exam.name })),
     tags: question.tags,
-    options: question.options.map((option) => ({
+    options: question.type === "NUMERICAL" ? [] : question.options.map((option) => ({
       id: option.id,
       code: option.code,
       text: option.text,
