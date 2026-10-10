@@ -2,6 +2,7 @@ import { AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { safeResourceUrl } from "./resource-url";
+import { requireResourceAccess } from "@/server/commerce/access";
 
 const publishedActive = {
   status: "PUBLISHED" as const,
@@ -214,6 +215,8 @@ export async function getLessonDetail(lessonSlug: string, path?: { subjectSlug: 
   if (!lesson) {
     throw new ValidationApiError("Lesson content was not found");
   }
+
+  await requireResourceAccess("LESSON", lesson.id);
 
   const subject = {
     code: lesson.chapter.subject.code,

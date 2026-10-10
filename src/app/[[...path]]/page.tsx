@@ -141,7 +141,7 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
     case "lessonMotion":
       return <LessonExperience />;
     case "learnRevision":
-      redirect("/progress");
+      redirect("/practice/revision");
     case "learnDownloads":
     case "learnSearch":
       redirect("/learn");
@@ -161,7 +161,7 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
     case "practiceReview":
       return <PracticeReview />;
     case "practiceMockTests":
-      return <PageContainer><main className="journey-shell"><h1>Mock exams</h1><p>No verified mock exams are available yet.</p><a href="/practice">Continue practice</a></main></PageContainer>;
+      redirect("/practice/mock-tests");
     case "practicePapers":
       return <PageContainer><main className="journey-shell"><h1>Previous-year papers</h1><p>No reviewed papers are available yet.</p><a href="/practice">Continue practice</a></main></PageContainer>;
     case "progress":

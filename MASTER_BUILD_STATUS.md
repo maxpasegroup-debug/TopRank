@@ -1,7 +1,69 @@
 # TopRank AI master build: implementation status
 Date: 2026-10-10 (Asia/Calcutta)
 
-## Executive summary
+## Current increment: parent and institution portals
+
+2026-10-10: Connected guardian, school, teacher/mentor/counsellor and student
+consent workspaces, verified operator proposals, scoped reporting/exports,
+institution lifecycle, single-use invitations, membership/assignment controls,
+feedback privacy, announcements, audit and in-app notices. Canonical role/school/
+guardian models extended; fresh server identity, membership and consent checks
+fail closed. See PORTALS_CONSENT_TENANTS.md for exact commands and policies.
+696 focused checks in 27 files passed, including 204 portal tests. Types, Prisma
+validation/generation, production build and diff checks passed. Migration
+20261010000400_portal_consent_tenants is UNAPPLIED. Persistence tests are mocked;
+real PostgreSQL and authenticated browser acceptance are NOT VERIFIED. Legal
+consent/identity/retention policies require approval. No commit, push, deployment,
+database access, migration/seed, dependency installation or integration activation.
+63 of 68 pre-existing dirty paths remain byte-for-byte unchanged; five were
+deliberately extended. Production auth/payment delivery remains disabled.
+
+Next task: controlled disposable-PostgreSQL and authenticated-browser verification
+of pending migrations and portal authorization, after explicit target confirmation.
+
+## Previous increment: commerce foundation
+
+2026-10-10: Added immutable administrator-defined package versions, boolean
+feature grants/gates, server-owned orders, test-only Razorpay transport, verified
+capture/event fulfilment, payment receipts, refund review/confirmation and
+notification intent/consent/retry foundations. Student /packages and admin
+/admin/commerce connect to Profile and administration. See COMMERCE_FOUNDATION.md
+for exact commands, policies and limitations. 416 focused tests in 15 files
+passed, including 124 commerce tests. Types, Prisma and build checks passed.
+Migration 20261010000300_commerce_foundation is UNAPPLIED. Runtime commerce is
+unconditionally disabled; no credentials or toggles activate it. No provider
+calls, messages, transactions or database access occurred. No legacy financial
+implementation exists in this checkout; AI pooled accounting remains unresolved.
+
+## Previous increment: competitions and achievement administration
+
+2026-10-10: Added dedicated timed-mock challenges, server-derived ranked results,
+opt-in aliases/pagination, explicit earned-activity checks, placement awards,
+prize moderation, corrections/revocation and revocable minimal sharing. Compete,
+Digital Profile, mock results, existing revision-to-mission flow and deterministic
+SIA are connected. See COMPETITIONS_ACHIEVEMENTS.md for policies and exact checks.
+282 focused tests in 11 files passed, including 93 competition tests. TypeScript,
+Prisma validation/client generation and production build passed. Persistence and
+overall-ranking SQL are mocked, not live PostgreSQL evidence. Forward migration
+created but unapplied; no auth activation, commit, push, deployment or DB access.
+
+## Previous increment: timed mocks and revision
+
+2026-10-10: Implemented timed mock blueprints/admin publication, owner-bound
+resumable attempts, server deadlines/scoring, results and persisted review state.
+Practice/learning, Digital Profile, mission revision and deterministic SIA are
+connected. See [TIMED_MOCK_EXAMS.md](TIMED_MOCK_EXAMS.md) for current commands,
+policies and limitations. Focused checks passed: 285 tests in 15 files,
+TypeScript, Prisma validation/generation and production build. No full-suite
+rerun, PostgreSQL integration or authenticated browser verification was performed.
+
+This increment started from a clean main at
+544b9f3a6d4ba3deb3c10b2cfa65fda8ea4eaf42; new changes are uncommitted.
+The forward timed-mock migration is created but unapplied. No historical
+migration changed, database accessed, commit/push/deployment or authentication
+activation occurred. Remote synchronization was not verified.
+
+## Previous increment summary (historical evidence)
 
 This is a substantial implementation increment, not completion of the master
 programme and not approval for private staging deployment. No commit, push,
@@ -29,19 +91,19 @@ changes remain intact. Historical migrations were not changed.
 | Authentication/security | Existing implementation preserved; production disabled | Student-only signup, sessions, origin/body protection, POST logout, distributed limiter preserved; Upstash/ingress/DB not live-verified |
 | Onboarding | Implemented code; approved visual matching pending | Five steps, saved aspirations/goals/exam/year/date/time/subjects, preview, confirmation; no Stitch exports were accessible |
 | Exam directory | Partial | Published active catalogue, searchable exam choice, category metadata, audited admin draft creation and publication; no invented official notices |
-| Learning | Partial | Existing exam/subject/chapter/lesson queries, scoped full-path navigation, HTTPS resource links, saved lessons and self-reported completion; full content authoring/import UI and revision system remain |
+| Learning | Partial | Existing exam/subject/chapter/lesson queries, scoped full-path navigation, HTTPS resource links, saved lessons and self-reported completion; mock revision links are connected; full content authoring/import UI remains |
 | Mission Board | Implemented core; broader scheduling partial | Seven-day deterministic draft, transactions, owner-bound tasks, completion, skips, rescheduling, version conflicts, events, one active plan/session; no separate weekly milestone engine |
 | Practice | Implemented single-question core | Server scoring, idempotent immutable attempt snapshots/history, explanations after submission; explicit per-link rule required |
-| Timed mock exams/revision | Not implemented | No server-managed mock definitions, deadlines, resume or persistent revision queue yet; old mock results no longer shown as genuine results |
-| Digital Profile | Partial | Actual task counts, lessons marked complete, elapsed study-session history, bookmarks; no competency/readiness, improvement estimates or certificates |
+| Timed mock exams/revision | Implemented code; live verification pending | Blueprints/publication, frozen private snapshots, server deadlines/resume/save/flags/bookmarks, immutable results and persisted revision; forward migration unapplied; see TIMED_MOCK_EXAMS.md |
+| Digital Profile | Partial | Actual task/lesson/session data plus recent observed mock results and revision links; no competency/readiness, improvement estimates or certificates |
 | Get Help | Partial | Saved owner-bound requests, admin response queue/audit; teacher directory, availability, booking and counselling not implemented |
 | TeachX Guru | Disabled; interface contract only | No concrete transport, credentials or verified external API contract found |
-| Competition/achievements | Not implemented | No challenge, leaderboard, award or fulfilment models; Compete shows an honest unavailable state, not fabricated ranks |
-| Packages/entitlements/payments | Not implemented; provider contract only | No entitlement/order/event workflow, signed provider transport or checkout; no price/policy invented |
-| Notifications/delivery | Not implemented; message contract only | No in-app preference/outbox/job system or delivery adapter; no message claimed delivered |
-| Parent/school/teacher portals | Not implemented beyond existing role guards | Production reports unavailable pending consent, enrolment and tenant implementation; demo reports not presented as student records |
+| Competition/achievements | Connected implementation; live verification pending | Dedicated mock challenges, verified-source ranks, private aliases, opt-in overall points, earned activity/placement badges, prize review, corrections and revocable sharing; migration unapplied; no fulfilment transport |
+| Packages/entitlements/payments | Commerce foundation connected; runtime disabled | Immutable catalogue, resource gates/grants, verified-capture fulfilment, receipts/refund operations; test-only Razorpay adapter; migration unapplied; checkout hand-off/live verification/recurring billing pending |
+| Notifications/delivery | Persisted foundation; external delivery disabled | In-app messages, consent, event/channel deduplication, bounded claims/retries, delivery states and expiry checks; no external provider connected or remote delivery claimed |
+| Parent/school/teacher portals | Connected code; live verification pending | Fresh tenant/guardian/assignment scopes, dual consent, provisioning, scoped summaries/exports, private feedback and announcements; migration unapplied; external legal verification/policy and authenticated DB/browser tests pending |
 | Operations | Partial implemented workspace | Platform-admin-only publication, question review/scoring-mode selection, exam draft creation and help responses; audited; authoring, staff provisioning and pagination remain |
-| SIA | Deterministic fallback implemented; AI disabled | Uses saved goal and unfinished mission only; no external calls, costs, provider connection or generated-fact claims |
+| SIA | Deterministic fallback implemented; AI disabled | Uses saved goals/missions/revision and observed active challenge suggestions; no invented eligibility or provider calls |
 | Navigation/polish | Partial | Six requested primary destinations, real Learn/Practice paths, responsive CSS and loading/error/empty states; browser/accessibility QA not performed |
 | Railway | Configuration prepared only | Node 22 family, build/start, database-free liveness, setup/recovery guide; not deployed or staging-ready |
 
@@ -86,6 +148,9 @@ practice, not a secure timed examination or award eligibility engine.
 | 20261009000200_student_journey | New | Not applied |
 | 20261009000300_practice_attempts | New | Not applied |
 | 20261009000400_help_and_audit | New | Not applied |
+| 20261010000100_timed_mock_exams | Timed-mock increment | Not applied |
+| 20261010000200_competitions_achievements | Competition increment | Not applied |
+| 20261010000300_commerce_foundation | Commerce increment | Not applied |
 
 No migration history/checksum was changed. No database-reset/delete commands
 were run. Schema validation/client generation do not validate SQL application,
@@ -93,7 +158,7 @@ real foreign keys, transactions, index enforcement, migration replay or drift.
 Partial unique indexes in journey SQL enforce one active plan/session; Prisma
 does not represent these indexes, so preserve them during future diffs.
 
-## Verification commands and results
+## Previous increment verification (historical)
 
 - `node node_modules/vitest/vitest.mjs run --no-cache --no-fsModuleCache --configLoader runner`: PASS, 373 tests; 26 files passed, one live test/file skipped.
 - Focused student/content tests: PASS before the final full run.
@@ -118,7 +183,7 @@ disposable database target is identified and its migrations are approved.
 
 ## External prerequisites and unresolved security blockers
 
-All five live-test variables were checked by presence only and are missing:
+At the historical audit, all five live-test variables were checked by presence only and were missing (not rechecked in the commerce increment):
 UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, AUTH_RATE_LIMIT_TEST_TARGET,
 AUTH_RATE_LIMIT_TEST_ENDPOINT_SHA256, RUN_UPSTASH_LIVE_TESTS. No credential,
 connection string or actual fingerprint was printed. Production activation,
@@ -147,9 +212,9 @@ Interfaces are not successful integrations and do not auto-activate with keys.
 
 The full programme has not reached its final staging-deployment boundary.
 Additional safe code implementation remains; missing credentials do not explain
-all unfinished features in the matrix. Timed mocks, revision, competitions,
-entitlements/orders/notifications, consent/tenant portals and controlled staff
-provisioning still require implementation as well as tests.
+all unfinished features in the matrix. Commerce foundation now exists but requires
+controlled database/provider/browser staging verification. Consent/tenant portals
+and controlled staff provisioning are the single next recommended build module.
 
 Live PostgreSQL verification is needed before relying on new persistence,
 constraints or concurrency behavior. No migration drift/checksum audit against
@@ -169,7 +234,10 @@ environment requirements, recovery and the post-hosting acceptance checklist.
 Do not activate authentication, deploy publicly, provision paid resources or
 declare production readiness from these local checks.
 
-## Final Git status
+## Previous increment Git snapshot (historical)
+
+Current changed-file status is in COMMERCE_FOUNDATION.md. The following snapshot
+predates the user's latest commit and the timed-mock increment.
 
 This includes existing user work and this increment. No files were staged,
 committed or pushed. Generated Prisma/build output is ignored. The only

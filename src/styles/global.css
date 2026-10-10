@@ -3731,6 +3731,51 @@ select.input {
 .journey-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 24px 0; border-block: 1px solid #dde2e8; }
 .journey-metrics dt { font-size: 14px; color: #566273; }
 .journey-metrics dd { margin: 12px 0 0; font-size: 28px; font-weight: 700; }
+.mock-links { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-block: 16px; }
+.mock-links label { display: inline-flex; align-items: center; gap: 8px; }
+.mock-links input[type=checkbox] { width: 20px; height: 20px; flex: 0 0 20px; }
+.mock-table-scroll { max-width: 100%; overflow-x: auto; }
+.mock-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mock-table th, .mock-table td { text-align: left; padding: 12px; border-bottom: 1px solid #d8dfe5; }
+.mock-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-block: 1px solid #d8dfe5; padding: 16px 0; }
+.mock-toolbar output { font-size: 24px; font-variant-numeric: tabular-nums; min-width: 100px; color: #9a3232; }
+.mock-question-layout { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 28px; padding-block: 24px; }
+.mock-palette { display: grid; grid-template-columns: repeat(4, 40px); gap: 8px; align-content: start; }
+.journey-shell .mock-palette button { padding: 0; width: 40px; height: 44px; font-size: 14px; }
+.journey-shell .mock-palette .answered { background: #e5f3ed; border-color: #33815f; color: #18482f; }
+.journey-shell .mock-palette .flagged { border: 2px solid #a56a1e; }
+.journey-shell .mock-palette [aria-current] { outline: 2px solid #285c9e; outline-offset: 2px; }
+.mock-question-text { font-size: 20px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
+.mock-explanation { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 3px solid #33815f; padding-left: 16px; }
+.mock-confirm { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: min(480px, calc(100% - 32px)); padding: 24px; border: 1px solid #8d98a3; border-radius: 6px; background: #fff; box-shadow: 0 0 0 100vmax #0007; z-index: 100; }
+.mock-confirm { margin: 0; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.mock-confirm::backdrop { background: #0007; }
+.journey-shell .mock-question-text { font-size: 20px; }
+.journey-shell .journey-answer-options input[type=radio] { width: 22px; height: 22px; min-height: 22px; flex: 0 0 22px; padding: 0; }
+.mock-revision-list { list-style: none; padding: 0; }
+.mock-revision-list > li { border-bottom: 1px solid #d8dfe5; padding-block: 24px; }
+.mock-filter { max-width: 280px; }
+.competition-achievements { list-style: none; padding: 0; }
+.competition-achievements > li { display: flex; align-items: flex-start; gap: 20px; border-bottom: 1px solid #d8dfe5; padding: 24px 0; }
+.competition-achievements > li > div { min-width: 0; overflow-wrap: anywhere; }
+.competition-badge { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; flex: 0 0 48px; background: #e3f2e9; border: 1px solid #33815f; color: #24613e; border-radius: 6px; }
+.competition-badge svg { width: 28px; height: 28px; }
+.competition-award-rule { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; border-bottom: 1px solid #d8dfe5; padding: 20px 0; }
+@media (max-width: 640px) { .competition-award-rule { grid-template-columns: minmax(0, 1fr); } }
+.mock-form { border: 0; padding: 0; min-width: 0; }
+.mock-section-editor { margin-block: 24px; padding-block: 20px; border-block: 1px solid #d8dfe5; }
+.mock-question-picker { max-height: 320px; overflow-y: auto; margin-block: 20px; border: 1px solid #d8dfe5; }
+.mock-question-picker label { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #d8dfe5; }
+.mock-question-picker input { flex: 0 0 20px; width: 20px; height: 20px; }
+.mock-question-picker span { min-width: 0; overflow-wrap: anywhere; }
+.mock-question-picker strong { display: block; font-size: 12px; }
+.journey-metrics dd.mock-small { font-size: 18px; }
+.journey-actions { flex-wrap: wrap; align-items: center; }
+@media (max-width: 640px) {
+ .mock-question-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+ .mock-palette { grid-template-columns: repeat(auto-fill, 40px); }
+ .mock-table th, .mock-table td { padding: 10px 6px; }
+}
 @media (max-width: 640px) {
   .journey-shell { padding-top: 12px; }
   .journey-shell h1 { font-size: 28px; }
@@ -3741,3 +3786,15 @@ select.input {
   .journey-task-actions { width: 100%; justify-content: space-between; }
   .journey-actions button { flex: 1; }
 }
+.commerce-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.commerce-tabs button { padding: 8px 12px; border: 1px solid #a3b0ab; border-radius: 4px; background: #fff; color: #25352e; }
+.commerce-tabs button[aria-selected="true"] { background: #d8eee2; border-color: #2c7150; }
+.commerce-catalogue { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.commerce-package { border: 1px solid #bdccc3; border-radius: 6px; padding: 16px; }
+.commerce-order { border-bottom: 1px solid #bdccc3; padding: 16px 0; }
+.commerce-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 16px 0; }
+.commerce-form label { display: grid; gap: 6px; flex: 1 1 210px; min-width: 0; }
+.commerce-form input, .commerce-form select { width: 100%; min-width: 0; padding: 8px; border: 1px solid #a3b0ab; border-radius: 4px; background: #fff; color: #25352e; }
+.commerce-form input[type="checkbox"] { width: auto; }
+.commerce-form fieldset label { display: flex; }
+.commerce-workspace p, .commerce-workspace h3, .commerce-workspace dd { overflow-wrap: anywhere; }

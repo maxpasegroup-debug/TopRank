@@ -14,7 +14,9 @@ export function middleware(request: NextRequest) {
   response.headers.set("x-request-id", requestId);
   response.headers.set("x-content-type-options", "nosniff");
   response.headers.set("x-frame-options", "DENY");
-  response.headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  const sharedAchievement = request.nextUrl.pathname.startsWith("/shared/achievements/");
+  response.headers.set("referrer-policy", sharedAchievement ? "no-referrer" : "strict-origin-when-cross-origin");
+  if (sharedAchievement) response.headers.set("cache-control", "private, no-store");
   response.headers.set("permissions-policy", "camera=(), microphone=(), geolocation=()");
 
   return response;

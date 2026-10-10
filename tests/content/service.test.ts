@@ -4,7 +4,10 @@ import { AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
 
 const mocks = vi.hoisted(() => ({
+  currentUser: vi.fn(),
   prisma: {
+    commerceGate: { findUnique: vi.fn() },
+    entitlement: { findFirst: vi.fn() },
     exam: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -25,6 +28,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/server/db", () => ({ prisma: mocks.prisma }));
+vi.mock("@/server/auth/session", () => ({ getCurrentUser: mocks.currentUser }));
 
 const student: AuthUser = { id: "student_1", email: "s@example.com", name: "Student", role: "STUDENT" };
 const parent: AuthUser = { id: "parent_1", email: "p@example.com", name: "Parent", role: "PARENT" };
@@ -32,6 +36,8 @@ const parent: AuthUser = { id: "parent_1", email: "p@example.com", name: "Parent
 describe("content service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.commerceGate.findUnique.mockResolvedValue(null);
+    mocks.currentUser.mockResolvedValue(student);
   });
 
   it("retrieves published active exams", async () => {
@@ -115,6 +121,14 @@ describe("content service", () => {
 
     expect(result.resources).toHaveLength(1);
     expect(result.subject.slug).toBe("physics");
+  });
+
+  it("denies paid lesson detail before disclosing resources when entitlement is absent", async () => {
+    mocks.prisma.lesson.findFirst.mockResolvedValue({ id: "paid-lesson" });
+    mocks.prisma.commerceGate.findUnique.mockResolvedValue({ featureCode: "LESSON_ACCESS" });
+    mocks.prisma.entitlement.findFirst.mockResolvedValue(null);
+    const { getLessonDetail } = await import("@/server/content/service");
+    await expect(getLessonDetail("paid-lesson")).rejects.toBeInstanceOf(AuthorizationApiError);
   });
 
   it("rejects unauthorized non-student roles", async () => {

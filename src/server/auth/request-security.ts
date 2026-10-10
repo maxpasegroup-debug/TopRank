@@ -78,12 +78,13 @@ export class AuthThrottleError extends ApiError {
   }
 }
 
-export async function readAuthJson(request: Request): Promise<unknown> {
+export async function readAuthJson(request: Request, limitBytes = AUTH_BODY_LIMIT_BYTES): Promise<unknown> {
+  if (!Number.isInteger(limitBytes) || limitBytes < 1 || limitBytes > 32768) throw new ValidationApiError();
   const tooLarge = () => new ApiError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");
   const length = request.headers.get("content-length");
   if (length !== null) {
     if (!/^\d+$/.test(length)) throw new ValidationApiError();
-    if (Number(length) > AUTH_BODY_LIMIT_BYTES) throw tooLarge();
+    if (Number(length) > limitBytes) throw tooLarge();
   }
   if (request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() !== "application/json") {
     throw new ApiError(415, "UNSUPPORTED_MEDIA_TYPE", "JSON request body required");
@@ -102,7 +103,7 @@ export async function readAuthJson(request: Request): Promise<unknown> {
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > AUTH_BODY_LIMIT_BYTES) {
+      if (size > limitBytes) {
         void reader.cancel().catch(() => undefined);
         throw tooLarge();
       }

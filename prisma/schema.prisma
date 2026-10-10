@@ -31,6 +31,8 @@ enum RelationshipStatus {
   PENDING
   ACTIVE
   REVOKED
+  REJECTED
+  EXPIRED
 }
 
 enum ParentRelationshipType {
@@ -114,8 +116,21 @@ model User {
   studySessions        StudySession[]
   lessonProgress       StudentLessonProgress[]
   practiceAttempts     PracticeAttempt[]
+  mockAttempts         MockAttempt[]
+  competitionEntries   CompetitionEntry[]
+  earnedAchievements   EarnedAchievement[]
   helpRequests         HelpRequest[]
   auditEvents          AuditEvent[]
+  commerceOrders       CommerceOrder[]
+  entitlements         Entitlement[]
+  notificationPreference NotificationPreference?
+  commerceNotifications CommerceNotification[]
+  schoolEnrollments SchoolEnrollment[] @relation("EnrolledStudent")
+  enrollmentVerifications SchoolEnrollment[] @relation("EnrollmentVerifier")
+  guardianVerifications StudentParentRelationship[] @relation("GuardianVerifier")
+  portalInvitations PortalInvitation[] @relation("PortalInviter")
+  acceptedPortalInvitations PortalInvitation[] @relation("PortalInviteAccepted")
+  portalFeedback PortalFeedback[]
 
   @@index([role])
   @@index([status])
@@ -181,11 +196,21 @@ model StudentParentRelationship {
   parentUserId     String
   relationshipType ParentRelationshipType @default(GUARDIAN)
   status           RelationshipStatus     @default(PENDING)
+  scopes           String[] @default([])
+  expiresAt        DateTime?
+  authorizationBasis String?
+  verificationReference String?
+  verifiedById     String?
+  verifiedAt       DateTime?
+  studentConsentAt DateTime?
+  parentAcceptedAt DateTime?
+  version          Int @default(0)
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
 
   student User @relation("ParentRelationshipStudent", fields: [studentUserId], references: [id], onDelete: Cascade)
   parent  User @relation("ParentRelationshipParent", fields: [parentUserId], references: [id], onDelete: Cascade)
+  verifier User? @relation("GuardianVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
 
   @@unique([studentUserId, parentUserId])
   @@index([parentUserId])
@@ -201,6 +226,11 @@ model School {
   updatedAt DateTime     @updatedAt
 
   memberships SchoolMembership[]
+  enrollments SchoolEnrollment[]
+  invitations PortalInvitation[]
+  announcements SchoolAnnouncement[]
+  profile String @default("")
+  version Int @default(0)
 }
 
 model SchoolMembership {
@@ -209,13 +239,17 @@ model SchoolMembership {
   userId    String
   role      SchoolMemberRole
   status    SchoolMembershipStatus @default(INVITED)
+  duty      String @default("UNVERIFIED")
+  version   Int @default(0)
   createdAt DateTime               @default(now())
   updatedAt DateTime               @updatedAt
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments SchoolStaffAssignment[]
 
   @@unique([schoolId, userId])
+  @@unique([schoolId, id])
   @@index([userId])
   @@index([role])
   @@index([status])
@@ -238,6 +272,7 @@ model Exam {
   officialUrl     String?
   studyPlans      StudyPlan[]
   practiceAttempts PracticeAttempt[]
+  mockExams        MockExam[]
 
   @@index([status, active])
 }
@@ -458,6 +493,7 @@ model MissionTask {
   updatedAt    DateTime @updatedAt
   plan         StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
   events       MissionTaskEvent[]
+  mockRevision MockAnswer?
   @@index([planId, dueDate])
 }
 
@@ -516,6 +552,7 @@ model AuditEvent {
   action    String
   entity    String
   entityId  String
+  detail    String?
   createdAt DateTime @default(now())
   actor     User @relation(fields: [actorId], references: [id], onDelete: Restrict)
   @@index([entity, entityId, createdAt])
@@ -555,4 +592,390 @@ model StudentLessonProgress {
   lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   @@unique([userId, lessonId])
   @@index([userId, completedAt])
+}
+
+enum MockAttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+}
+
+model MockExam {
+  id              String @id @default(cuid())
+  examId          String
+  title           String
+  status          ContentStatus @default(DRAFT)
+  version         Int @default(0)
+  durationSeconds Int
+  maxAttempts     Int
+  revealPolicy    String
+  sections        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  exam            Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  attempts        MockAttempt[]
+  competition     Competition?
+  @@index([examId, status])
+}
+
+model MockAttempt {
+  id          String @id @default(cuid())
+  userId      String
+  mockExamId  String
+  requestKey  String
+  status      MockAttemptStatus @default(IN_PROGRESS)
+  startedAt   DateTime
+  deadline    DateTime
+  finalizedAt DateTime?
+  snapshot    Json
+  result      Json?
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mockExam    MockExam @relation(fields: [mockExamId], references: [id], onDelete: Restrict)
+  answers     MockAnswer[]
+  competitionEntry CompetitionEntry?
+  @@unique([userId, requestKey])
+  @@index([userId, startedAt])
+  @@index([userId, mockExamId, status])
+}
+
+model MockAnswer {
+  id             String @id @default(cuid())
+  attemptId      String
+  position       Int
+  answer         Json
+  version        Int @default(0)
+  flagged        Boolean @default(false)
+  bookmarked     Boolean @default(false)
+  reviewedAt     DateTime?
+  revisionTaskId String? @unique
+  attempt        MockAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  revisionTask   MissionTask? @relation(fields: [revisionTaskId], references: [id], onDelete: SetNull)
+  @@unique([attemptId, position])
+}
+
+model Competition {
+  id          String @id @default(cuid())
+  title       String
+  type        String
+  status      String @default("DRAFT")
+  mockExamId  String @unique
+  mockVersion Int
+  startsAt    DateTime
+  endsAt      DateTime
+  config      Json
+  version     Int @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  mockExam    MockExam @relation(fields: [mockExamId], references: [id], onDelete: Restrict)
+  entries     CompetitionEntry[]
+  @@index([status, startsAt])
+}
+
+model CompetitionEntry {
+  id            String @id @default(cuid())
+  competitionId String
+  userId        String
+  attemptId     String? @unique
+  requestKey    String
+  alias         String @unique
+  visible       Boolean @default(false)
+  joinedAt      DateTime @default(now())
+  disqualified  Boolean @default(false)
+  decision      String?
+  score         Decimal? @db.Decimal(12, 4)
+  timeSeconds   Int?
+  rank          Int?
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Restrict)
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempt       MockAttempt? @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+  @@unique([competitionId, userId])
+  @@unique([userId, requestKey])
+  @@index([competitionId, rank])
+}
+
+model AchievementDefinition {
+  id        String @id @default(cuid())
+  code      String @unique
+  title     String
+  kind      String
+  threshold Int
+  badge     String
+  status    String @default("DRAFT")
+  version   Int @default(0)
+  createdAt DateTime @default(now())
+  earned    EarnedAchievement[]
+}
+
+model EarnedAchievement {
+  id           String @id @default(cuid())
+  userId       String
+  definitionId String
+  scope        String
+  title        String
+  badge        String
+  explanation  String
+  status       String @default("ACTIVE")
+  revocationSource String?
+  evidence     Json
+  shareHash    String? @unique
+  version      Int @default(0)
+  awardedAt    DateTime @default(now())
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  definition   AchievementDefinition @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  prize        PrizeAward?
+  @@unique([userId, definitionId, scope])
+  @@index([userId, awardedAt])
+  @@index([scope, status])
+}
+
+model PrizeAward {
+  id            String @id @default(cuid())
+  achievementId String @unique
+  label         String
+  status        String @default("PENDING_REVIEW")
+  decision      String?
+  version       Int @default(0)
+  updatedAt     DateTime @updatedAt
+  achievement   EarnedAchievement @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+}
+
+model CommerceFeature {
+  code String @id
+  title String
+  gates CommerceGate[]
+  entitlements Entitlement[]
+}
+
+model CommerceGate {
+  id String @id @default(cuid())
+  kind String
+  resourceId String
+  featureCode String
+  feature CommerceFeature @relation(fields: [featureCode], references: [code], onDelete: Restrict)
+  @@unique([kind, resourceId])
+}
+
+model CommercePackage {
+  id String @id @default(cuid())
+  code String
+  revision Int
+  title String
+  description String
+  status String @default("DRAFT")
+  amountMinor Int
+  currency String
+  interval String
+  durationDays Int
+  features String[]
+  availableFrom DateTime
+  availableUntil DateTime
+  createdAt DateTime @default(now())
+  orders CommerceOrder[]
+  @@unique([code, revision])
+  @@index([status, availableFrom])
+}
+
+model CommerceOrder {
+  id String @id @default(cuid())
+  userId String
+  packageId String
+  requestKey String
+  status String @default("PENDING")
+  amountMinor Int
+  currency String
+  snapshot Json
+  providerOrderId String? @unique
+  checkoutState String @default("NOT_STARTED")
+  createdAt DateTime @default(now())
+  capturedAt DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  package CommercePackage @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  payments CommercePayment[]
+  entitlements Entitlement[]
+  receipt CommerceReceipt?
+  refunds CommerceRefund[]
+  @@unique([userId, requestKey])
+  @@index([userId, createdAt])
+}
+
+model CommercePayment {
+  id String @id
+  orderId String
+  amountMinor Int
+  currency String
+  status String
+  capturedAt DateTime?
+  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  refunds CommerceRefund[]
+}
+
+model CommerceEvent {
+  id String @id
+  digest String
+  kind String
+  providerOrderId String
+  paymentId String
+  refundId String?
+  status String @default("RECEIVED")
+  errorCode String?
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+  @@index([status, createdAt])
+}
+
+model Entitlement {
+  id String @id @default(cuid())
+  userId String
+  featureCode String
+  source String
+  provenance String @unique
+  orderId String?
+  status String @default("ACTIVE")
+  startsAt DateTime
+  endsAt DateTime
+  reason String?
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  feature CommerceFeature @relation(fields: [featureCode], references: [code], onDelete: Restrict)
+  order CommerceOrder? @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@index([userId, featureCode, status, endsAt])
+}
+
+model CommerceReceipt {
+  id String @id
+  orderId String @unique
+  amountMinor Int
+  currency String
+  issuedAt DateTime
+  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+}
+
+model CommerceRefund {
+  id String @id @default(cuid())
+  orderId String
+  requestKey String
+  amountMinor Int
+  reason String
+  status String @default("REQUESTED")
+  decision String?
+  providerRefundId String? @unique
+  paymentId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  payment CommercePayment? @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  @@unique([orderId, requestKey])
+}
+
+model NotificationPreference {
+  userId String @id
+  email Boolean @default(false)
+  whatsapp Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CommerceNotification {
+  id String @id @default(cuid())
+  userId String
+  eventKey String
+  channel String
+  template String
+  message String
+  status String @default("PENDING")
+  attempts Int @default(0)
+  nextAttemptAt DateTime @default(now())
+  leaseUntil DateTime?
+  providerMessageId String?
+  errorCode String?
+  readAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, eventKey, channel])
+  @@index([status, nextAttemptAt])
+}
+
+model SchoolEnrollment {
+  id String @id @default(cuid())
+  schoolId String
+  studentId String
+  status RelationshipStatus @default(PENDING)
+  scopes String[]
+  expiresAt DateTime
+  authorizationBasis String
+  verificationReference String
+  verifiedById String
+  verifiedAt DateTime
+  studentConsentAt DateTime?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  school School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  student User @relation("EnrolledStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  verifier User @relation("EnrollmentVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
+  assignments SchoolStaffAssignment[]
+  feedback PortalFeedback[]
+  @@unique([schoolId, studentId])
+  @@unique([schoolId, id])
+  @@index([studentId, status])
+  @@index([schoolId, status])
+}
+
+model SchoolStaffAssignment {
+  id String @id @default(cuid())
+  schoolId String
+  enrollmentId String
+  membershipId String
+  active Boolean @default(true)
+  enrollment SchoolEnrollment @relation(fields: [schoolId, enrollmentId], references: [schoolId, id], onDelete: Restrict)
+  membership SchoolMembership @relation(fields: [schoolId, membershipId], references: [schoolId, id], onDelete: Restrict)
+  @@unique([enrollmentId, membershipId])
+  @@index([membershipId, active])
+}
+
+model PortalInvitation {
+  id String @id @default(cuid())
+  schoolId String?
+  issuerId String
+  acceptedUserId String?
+  email String
+  name String
+  role UserRole
+  duty String
+  membershipRole SchoolMemberRole?
+  tokenHash String @unique
+  requestKey String @unique
+  authorizationBasis String
+  verificationReference String
+  expiresAt DateTime
+  status String @default("PENDING")
+  acceptedAt DateTime?
+  createdAt DateTime @default(now())
+  school School? @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  issuer User @relation("PortalInviter", fields: [issuerId], references: [id], onDelete: Restrict)
+  acceptedUser User? @relation("PortalInviteAccepted", fields: [acceptedUserId], references: [id], onDelete: Restrict)
+  @@index([schoolId, status])
+}
+
+model PortalFeedback {
+  id String @id @default(cuid())
+  enrollmentId String
+  authorId String
+  requestKey String
+  confidential Boolean
+  message String
+  createdAt DateTime @default(now())
+  enrollment SchoolEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  @@unique([authorId, requestKey])
+  @@index([enrollmentId, createdAt])
+}
+
+model SchoolAnnouncement {
+  id String @id @default(cuid())
+  schoolId String
+  requestKey String @unique
+  title String
+  message String
+  status String @default("PUBLISHED")
+  createdAt DateTime @default(now())
+  school School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  @@index([schoolId, status, createdAt])
 }
